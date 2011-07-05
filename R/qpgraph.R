@@ -2509,6 +2509,8 @@ qpClique <- function(nrrMatrix, N=NA, threshold.lim=c(0,1), breaks=5, plot=TRUE,
                      logscale.clqsize=FALSE,
                      titleclq="maximum clique size as function of threshold",
                      verbose=FALSE) {
+  n.var <- nrow(nrrMatrix)
+  n.adj <- n.var*(n.var-1)/2
 
   if (is.null(qpCliqueOutput)) {
 
@@ -2524,8 +2526,6 @@ qpClique <- function(nrrMatrix, N=NA, threshold.lim=c(0,1), breaks=5, plot=TRUE,
     thrmaxclqszeunderN <- 0
     mpctedclqsze <- matrix(rep(0,length(br)*3),nrow=length(br),ncol=3)
     colnames(mpctedclqsze) <- c("density","clqsize","threshold")
-    n.var <- nrow(nrrMatrix)
-    n.adj <- n.var*(n.var-1)/2
 
     ## by now we coerce this to a regular matrix
     nrrMatrix <- as(nrrMatrix, "matrix")
