@@ -4203,7 +4203,7 @@ clPrCall <- function(cl, fun, n.adj, ...) {
 .qpFastNrrPar <- function(X, I, Y, q, restrict.Q, nTests, alpha, pairup.i.noint,
                           pairup.j.noint, pairup.ij.int, exact.test, verbose,
                           estimateTime, nAdj2estimateTime) {
-  myMaster <- get("master", sys.frame(-7))
+  myMaster <- getClusterOption("masterNode", defaultClusterOptions)
 
   startTime <- 0
   if (estimateTime)
@@ -4223,7 +4223,7 @@ clPrCall <- function(cl, fun, n.adj, ...) {
 
 .qpFastNrrIdenticalQsPar <- function(X, q, nTests, alpha, pairup.i.noint, pairup.j.noint,
                                      pairup.ij.int, verbose, estimateTime, nAdj2estimateTime) {
-  myMaster <- get("master", sys.frame(-7))
+  myMaster <- getClusterOption("masterNode", defaultClusterOptions)
 
   startTime <- 0
   if (estimateTime)

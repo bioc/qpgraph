@@ -18,7 +18,7 @@ employed to reverse engineer a molecular regulatory network.
 \details{
   \tabular{ll}{
   Package: \tab qpgraph\cr
-  Version: \tab 1.8.0\cr %%\Sexpr{packageDescription("qpgraph")[["Version"]]}\cr
+  Version: \tab 1.8.2\cr %%\Sexpr{packageDescription("qpgraph")[["Version"]]}\cr
   Built: \tab R 2.13.0\cr %%\Sexpr{packageDescription("qpgraph")[["Built"]]}\cr
   Depends: \tab methods\cr %%\Sexpr{packageDescription("qpgraph")[["Depends"]]}\cr
   Imports: \tab methods, annotate, Matrix, graph, Biobase, AnnotationDbi\cr %%\Sexpr{packageDescription("qpgraph")[["Imports"]]}\cr
