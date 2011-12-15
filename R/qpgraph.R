@@ -3263,7 +3263,7 @@ setMethod("qpPAC", signature(X="matrix"),
     ## using the clique list and the IPF algorithm
     Shat <- qpIPF(S, clqlst, tol=tol, verbose=verbose, R.code.only=R.code.only)
   } else
-    Shat <- qpHTF(S, A, verbose=verbose, R.code.only=R.code.only)
+    Shat <- qpHTF(S, A, tol=tol, verbose=verbose, R.code.only=R.code.only)
 
   ## estimate partial correlation coefficients and their standard errors
 
