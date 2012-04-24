@@ -63,6 +63,11 @@ one is used.
 In this setting further restrictions to the maximum value of \code{q} apply, concretely,
 it cannot be smaller than \code{p} plus the number of levels of the discrete variables
 involved in the marginal distributions employed by the algorithm.
+
+Currently discrete variables are allowed to have missing values and in such circumstance
+only the complete observations in (i, j, Q) are employed in the calculations. This makes
+the conditional independence test only correct under the assumption that missing data is
+missing completely at random (MCAR); see Little and Rubin (1989).
 }
 \value{
 A list with two members, the value of the statistic and its corresponding
@@ -75,8 +80,10 @@ Gaussian graphical model search from microarray data with p larger than n,
 
 Lauritzen, S.L. \emph{Graphical models}. Oxford University Press, 1996.
 
-Lauritzen, S.L and Wermuth, N. Graphical Models for associations between variables,
+Lauritzen, S.L. and Wermuth, N. Graphical Models for associations between variables,
 some of which are qualitative and some quantitative. \emph{Ann. Stat.}, 17(1):31-57, 1989.
+
+Little, R.J.A. and Rubin, D.B. \emph{Statistical analysis with missing data}. Wiley, 1989.
 
 Tur, I. and Castelo, R. Learning mixed graphical models from data with p larger than n,
 In \emph{Proc. 27th Conference on Uncertainty in Artificial Intelligence},

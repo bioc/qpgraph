@@ -81,15 +81,23 @@ the estimation of the non-rejection rate converges to the same value. Full
 details on the calculation of the non-rejection rate can be found in
 Castelo and Roverato (2006).
 
-When \code{I} is set different to \code{NULL} then mixed graphical model theory
-is employed and, concretely, it is assumed that the data comes from an homogeneous
-conditional Gaussian distribution. In this setting further restrictions to the
-maximum value of \code{q} apply, concretely, it cannot be smaller than
+When either discrete phenotypic variables in \code{ExpressionSet} objects, discrete
+phenotypic/genotype variables in \code{smlSet} objects, or \code{I} is set different
+to \code{NULL} with an input \code{matrix} or \code{data.frame}, then mixed graphical
+model theory is employed. More concretely, it is assumed that the data comes from an
+homogeneous conditional Gaussian distribution. In this setting further restrictions
+to the maximum value of \code{q} apply, concretely, it cannot be smaller than
 \code{p} plus the number of levels of the discrete variables involved in the
 marginal distributions employed by the algorithm. By default, with
 \code{exact.test=TRUE}, an exact test for conditional independence is employed,
 otherwise an asymptotic one will be used. Full details on these features can
 be found in Tur and Castelo (2011).
+
+Currently discrete variables are allowed to have missing values and in such circumstance
+only the complete observations in each conditional independence test involving (i, j, Q),
+with |Q|=q, are employed in the calculations. This makes each conditional independence test,
+and the non-rejection rate estimation thereof, only correct under the assumption that missing
+data is missing completely at random (MCAR); see Little and Rubin (1989).
 }
 \value{
 A \code{\link{dspMatrix-class}} symmetric matrix of estimated non-rejection
@@ -105,6 +113,8 @@ days, hours, minutes and seconds for completion of the calculations is returned.
 Castelo, R. and Roverato, A. A robust procedure for
 Gaussian graphical model search from microarray data with p larger than n,
 \emph{J. Mach. Learn. Res.}, 7:2621-2650, 2006.
+
+Little, R.J.A. and Rubin, D.B. \emph{Statistical analysis with missing data}. Wiley, 1989.
 
 Tur, I. and Castelo, R. Learning mixed graphical models from data with p larger than n,
 In \emph{Proc. 27th Conference on Uncertainty in Artificial Intelligence},
