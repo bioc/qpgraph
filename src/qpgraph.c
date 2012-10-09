@@ -2041,9 +2041,6 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       work_with_margin = TRUE;
   }
 
-  if (work_with_margin)
-    ijQ = Calloc(q+2, int);
-
   if (QR != R_NilValue) {
     q = length(QR);
 
@@ -2056,14 +2053,18 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
     if (q > n-3)
       error("q=%d > n-3=%d", q, n-3);
 
+    if (work_with_margin)
+      ijQ = Calloc(q+2, int); /* stores the indices of the variables in the {i, j, Q} margin */
+
     Q = Calloc(q, int);
     for (i=0; i < q; i++)
       if (work_with_margin) {
         ijQ[i+2] = INTEGER(QR)[i] - 1;
-        Q[i] = 2+q;
+        Q[i] = n_I == 0 ? 2+i : INTEGER(QR)[i] - 1;
       } else
         Q[i] = INTEGER(QR)[i] - 1;
-  }
+  } else
+    ijQ = Calloc(2, int);
 
   n_upper_tri = ( (q+2) * ((q+2)+1) ) / 2; /* this upper triangle includes the diagonal */
 
@@ -2152,7 +2153,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
           ijQ[1] = j2;
           memset(S, 0, sizeof(double) * n_upper_tri);
           n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-          lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+          lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
         } else
           lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
       } else
@@ -2236,7 +2237,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
             ijQ[1] = j2;
             memset(S, 0, sizeof(double) * n_upper_tri);
             n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-            lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+            lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
           } else
             lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
         } else
@@ -2318,7 +2319,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
             ijQ[1] = j2;
             memset(S, 0, sizeof(double) * n_upper_tri);
             n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-            lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+            lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
           } else
             lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
         } else
@@ -2566,9 +2567,6 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       work_with_margin = TRUE;
   }
 
-  if (work_with_margin)
-    ijQ = Calloc(q+2, int);
-
   if (QR != R_NilValue) {
     q = length(QR);
 
@@ -2581,14 +2579,18 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
     if (q > n-3)
       error("q=%d > n-3=%d", q, n-3);
 
+    if (work_with_margin)
+      ijQ = Calloc(q+2, int);
+
     Q = Calloc(q, int);
     for (i=0; i < q; i++)
       if (work_with_margin) {
         ijQ[i+2] = INTEGER(QR)[i] - 1;
-        Q[i] = 2+q;
+        Q[i] = n_I == 0 ? 2+i : INTEGER(QR)[i] - 1;
       } else
         Q[i] = INTEGER(QR)[i] - 1;
-  }
+  } else
+    ijQ = Calloc(2, int);
 
   n_upper_tri = ( (q+2) * ((q+2)+1) ) / 2; /* this upper triangle includes the diagonal */
 
@@ -2680,7 +2682,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
             ijQ[1] = j2;
             memset(S, 0, sizeof(double) * n_upper_tri);
             n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-            lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+            lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
           } else
             lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
         } else
@@ -2765,7 +2767,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
             ijQ[1] = j2;
             memset(S, 0, sizeof(double) * n_upper_tri);
             n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-            lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+            lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
           } else
             lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
         } else
@@ -2847,7 +2849,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
           ijQ[1] = j2;
           memset(S, 0, sizeof(double) * n_upper_tri);
           n_co = ssd(REAL(XR), n_var, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-          lambda = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+          lambda = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
         } else
           lambda = qp_ci_test_std(S, n_var, n, i2, j2, Q, q, NULL);
       } else
@@ -3619,7 +3621,7 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
   }
 
 /*
-  Rprintf("ssd:\n");
+  Rprintf("ssd (n_Y=%d):\n", n_Y);
   int m = 0;
   for (k=0; k < n_Y; k++) {
     int l;
@@ -3628,6 +3630,7 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
     }
     Rprintf("\n");
   }
+  Rprintf("n=%d\n", *n_co);
 */
 
   lr = x = symmatlogdet(ssd_mat, n_Y, &sign);
@@ -3686,7 +3689,7 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
   }
 
 /*
-  Rprintf("ssd_i:\n");
+  Rprintf("ssd_i(n_Y_i=%d):\n", n_Y_i);
   m = 0;
   for (k=0; k < n_Y_i; k++) {
     int l;
@@ -7650,7 +7653,7 @@ ssd(double* X, int p, int n, int* Y, int n_Y, int* idx_obs, int n_idx_obs,
   n1 = n_idx_obs - n_mis - 1;
 
   if (n1 < 1)
-    error("no complete observations available (n=%d, n_idx_obs=%d, n_mis=%d)\n", n1, n, n_idx_obs, n_mis);
+    error("no complete observations available (n1=%d, n_idx_obs=%d, n_mis=%d)\n", n1, n_idx_obs, n_mis);
 
   l = 0;
   for (i=0; i < n_Y; i++)

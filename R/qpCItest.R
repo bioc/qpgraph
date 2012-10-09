@@ -470,10 +470,26 @@ setMethod("qpCItest", signature(X="data.frame"),
             rval <- NA
 
             if (is.null(I)) {
-              S <- qpCov(X)
-              n <- nrow(X)
+              if (use == "em")
+                stop("EM not implemented yet for missing values in continuous variables. Please set use=\"complete.obs\"\n")
 
-              rval <- qpgraph:::.qpCItest(S, i, j, Q, R.code.only)
+              Xsub <- X[, c(i, j, Q), drop=FALSE]
+              missingMask <- apply(Xsub[, , drop=FALSE], 1, function(x) any(is.na(x)))
+
+              n <- nrow(Xsub)
+              if (n - sum(missingMask) < 3)
+                stop(sprintf("Too many missing values in (i, j, Q), only %d complete observations left\n",
+                             n-sum(missingMask)))
+
+              S <- qpCov(Xsub[!missingMask, ,drop=FALSE], corrected=TRUE)
+              i2 <- 1L
+              j2 <- 2L
+              Q2 <- 2L+seq(along=Q)
+              names(i2) <- nam_i
+              names(j2) <- nam_j
+              names(Q2) <- nam_Q
+
+              rval <- qpgraph:::.qpCItest(S, i=i2, j=j2, Q=Q2, R.code.only)
             } else {
               if (!is.character(I) && !is.numeric(I) && !is.integer(I))
                 stop("I should be either variables names or indices\n")
@@ -495,7 +511,7 @@ setMethod("qpCItest", signature(X="data.frame"),
               if (any(nLevels[I] == 1))
                 stop(sprintf("Discrete variable %s has only one level", colnames(X)[I[nLevels[I]==1]]))
 
-              missingMask <- apply(X[, I, drop=FALSE], 2, function(x) any(is.na(x)))
+              missingMask <- apply(X[, c(I, Y), drop=FALSE], 2, function(x) any(is.na(x)))
               missingData <- any(missingMask)
               ssd <- mapX2ssd <- NULL
               if (!missingData) {
@@ -580,10 +596,23 @@ setMethod("qpCItest", signature(X="matrix"),
               if (use == "em")
                 stop("EM not implemented yet for missing values in continuous variables. Please set use=\"complete.obs\"\n")
 
-              S <- qpCov(X)
-              n <- nrow(X)
+              Xsub <- X[, c(i, j, Q), drop=FALSE]
+              missingMask <- apply(Xsub[, , drop=FALSE], 1, function(x) any(is.na(x)))
 
-              rval <- qpgraph:::.qpCItest(S, i, j, Q, R.code.only)
+              n <- nrow(Xsub)
+              if (n - sum(missingMask) < 3)
+                stop(sprintf("Too many missing values in (i, j, Q), only %d complete observations left\n",
+                             n-sum(missingMask)))
+
+              S <- qpCov(Xsub[!missingMask, ,drop=FALSE], corrected=TRUE)
+              i2 <- 1L
+              j2 <- 2L
+              Q2 <- 2L+seq(along=Q)
+              names(i2) <- nam_i
+              names(j2) <- nam_j
+              names(Q2) <- nam_Q
+
+              rval <- qpgraph:::.qpCItest(S, i=i2, j=j2, Q=Q2, R.code.only)
             } else {
               if (!is.character(I) && !is.numeric(I) && !is.integer(I))
                 stop("argument I should contain either variables names or indices\n")
@@ -722,7 +751,7 @@ setMethod("qpCItest", signature(X="SsdMatrix"),
   sigma   <- sqrt((S11 - S12 %*% S22inv %*% S21) * (n - 1) / df)
   se      <- as.numeric(sigma * sqrt(S22inv[1,1] / (n - 1)))
   t.value <- c(t = betahat / se)
-  p.value <- c(two.sided = 2 * (1 - pt(abs(t.value), df)))
+  p.value <- c("two.sided" = 2 * (1 - pt(abs(t.value), df)))
   est     <- c(beta = betahat)
   n.value <- c("partial regression coefficient" = 0)
   method  <- "Conditional independence test for continuous data using a t test for zero partial regression coefficient"
@@ -1204,6 +1233,48 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
 
 setGeneric("qpAllCItests", function(X, ...) standardGeneric("qpAllCItests"))
 
+## X comes as a data frame
+setMethod("qpAllCItests", signature(X="data.frame"),
+          function(X, I=NULL, Q=NULL, pairup.i=NULL, pairup.j=NULL,
+                   long.dim.are.variables=TRUE, exact.test=TRUE,
+                   use=c("complete.obs", "em"), tol=0.01, return.type=c("p.value", "statn", "all"),
+                   verbose=TRUE, R.code.only=FALSE, clusterSize=1, estimateTime=FALSE,
+                   nAdj2estimateTime=10) {
+
+            use <- match.arg(use)
+            return.type <-  match.arg(return.type)
+
+            startTime <- c(user.self=0, sys.self=0, elapsed=0, user.child=0, sys.child=0)
+            class(startTime) <- "proc_time"
+            if (estimateTime)
+              startTime <- proc.time()
+
+            if (clusterSize > 1 && R.code.only)
+              stop("Using a cluster (clusterSize > 1) only works with R.code.only=FALSE\n")
+
+            if (clusterSize > 1 &&
+               (!qpgraph:::.qpIsPackageLoaded("rlecuyer") || !qpgraph:::.qpIsPackageLoaded("snow")))
+              stop("Using a cluster (clusterSize > 1) requires first loading packages 'snow' and 'rlecuyer'\n")
+
+            X <- as.matrix(X)
+            if (!is.double(X))
+              stop("X should be double-precision real numbers\n")
+
+            if (long.dim.are.variables &&
+                sort(dim(X),decreasing=TRUE,index.return=TRUE)$ix[1] == 1)
+              X <- t(X)
+
+            if (is.null(colnames(X))) 
+              colnames(X) <- 1:ncol(X)
+
+            qpgraph:::.qpAllCItests(X, I, Q, pairup.i, pairup.j,
+                                    exact.test, use, tol, return.type,
+                                    verbose, R.code.only, clusterSize,
+                                    startTime, nAdj2estimateTime)
+          })
+
+          
+## X comes as a matrix
 setMethod("qpAllCItests", signature(X="matrix"),
           function(X, I=NULL, Q=NULL, pairup.i=NULL, pairup.j=NULL,
                    long.dim.are.variables=TRUE, exact.test=TRUE,
@@ -1248,6 +1319,9 @@ setMethod("qpAllCItests", signature(X="matrix"),
 
   if (use == "em" && !R.code.only)
     stop("use=\"em\" does not work yet with R.code.only=FALSE\n")
+
+  if (use == "em" && is.null(I))
+    stop("use=\"em\" does not work yet with continuous data only\n")
  
   if (class(clusterSize)[1] == "numeric" || class(clusterSize)[1] == "integer") {
     if (clusterSize > 1) {
@@ -1472,13 +1546,18 @@ setMethod("qpAllCItests", signature(X="matrix"),
     return(pvstatn)
   }
 
+  missingMask <- apply(X[, , drop=FALSE], 1, function(x) any(is.na(x)))
+  missingData <- any(is.na(missingMask))
+
   S <- ssd <- mapX2ssd <- NULL
-  if (!is.null(I)) {  ## calculate the uncorrected sum of squares and deviations
-    ssd <- qpCov(X[, Y, drop=FALSE], corrected=FALSE)
-    mapX2ssd <- match(var.names, colnames(ssd))
-    ## names(mapX2ssd) <- colnames(X) ## is this necessary?
-  } else             ## calculate sample covariance matrix
-    S <- qpCov(X)
+  if (!missingData) {
+    if (!is.null(I)) {  ## calculate the uncorrected sum of squares and deviations
+      ssd <- qpCov(X[, Y, drop=FALSE], corrected=FALSE)
+      mapX2ssd <- match(var.names, colnames(ssd))
+      ## names(mapX2ssd) <- colnames(X) ## is this necessary?
+    } else             ## calculate sample covariance matrix
+      S <- qpCov(X)
+  }
 
   ## return an efficiently stored symmetric matrix
   if (return.type == "all" || return.type == "p.value") {
@@ -1508,15 +1587,17 @@ setMethod("qpAllCItests", signature(X="matrix"),
   if (verbose && elapsedTime == 0)
     pb <- txtProgressBar(style=3)
 
-  cit <- NA ### build return object depending on return.type CONTINUE HERE !!!!
+  cit <- NA
 
   ## intersection variables against ij-exclusive variables
   for (i in pairup.ij.int) {
     for (j in c(pairup.i.noint,pairup.j.noint)) {
 
-      if (is.null(I))
-        cit <- qpgraph:::.qpCItest(S, i, j, Q, R.code.only=TRUE)
-      else
+      if (is.null(I)) {
+        Xsub <- X[, c(i, j, Q), drop=FALSE]
+        S <- qpCov(Xsub)
+        cit <- qpgraph:::.qpCItest(S, 1L, 2L, 2L+seq(along=Q), R.code.only=TRUE)
+      } else
         cit <- qpgraph:::.qpCItestHMGM(X, I, nLevels, Y, ssd, mapX2ssd, i, j, Q,
                                        exact.test, use, tol, R.code.only=TRUE)
 
@@ -1545,9 +1626,11 @@ setMethod("qpAllCItests", signature(X="matrix"),
     for (i in pairup.i.noint) {
       for (j in pairup.j.noint) {
 
-        if (is.null(I))
-          cit <- qpgraph:::.qpCItest(S, i, j, Q, R.code.only=TRUE)
-        else
+        if (is.null(I)) {
+          Xsub <- X[, c(i, j, Q), drop=FALSE]
+          S <- qpCov(Xsub)
+          cit <- qpgraph:::.qpCItest(S, 1L, 2L, 2L+seq(along=Q), R.code.only=TRUE)
+        } else
           cit <- qpgraph:::.qpCItestHMGM(X, I, nLevels, Y, ssd, mapX2ssd, i, j, Q,
                                          exact.test, use, tol, R.code.only=TRUE)
 
@@ -1574,15 +1657,17 @@ setMethod("qpAllCItests", signature(X="matrix"),
 
   ## intersection variables against themselves (avoiding pairing of the same)
   if (elapsedTime == 0 || k < nAdj2estimateTime) {
-    for (i in 1:(l.int-1)) {
+    for (i in seq(along=pairup.ij.int[-1])) {
       i2 <- pairup.ij.int[i]
 
       for (j in (i+1):l.int) {
         j2 <- pairup.ij.int[j]
 
-        if (is.null(I))
-          cit <- qpgraph:::.qpCItest(S, i2, j2, Q, R.code.only=TRUE)
-        else
+        if (is.null(I)) {
+          Xsub <- X[, c(i, j, Q), drop=FALSE]
+          S <- qpCov(Xsub)
+          cit <- qpgraph:::.qpCItest(S, 1L, 2L, 2L+seq(along=Q), R.code.only=TRUE)
+        } else
           cit <- qpgraph:::.qpCItestHMGM(X, I, nLevels, Y, ssd, mapX2ssd, i2, j2, Q,
                                          exact.test, use, tol, R.code.only=TRUE)
 

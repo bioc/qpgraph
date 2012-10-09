@@ -1,5 +1,6 @@
 \name{qpAllCItests}
 \alias{qpAllCItests}
+\alias{qpAllCItests,data.frame-method}
 \alias{qpAllCItests,matrix-method}
 
 \title{
@@ -9,6 +10,12 @@ Tests of conditional independence
 Performs a test of conditional independence for every pair of variables.
 }
 \usage{
+\S4method{qpAllCItests}{data.frame}(X, I=NULL, Q=NULL, pairup.i=NULL, pairup.j=NULL,
+                                    long.dim.are.variables=TRUE, exact.test=TRUE,
+                                    use=c("complete.obs", "em"), tol=0.01,
+                                    return.type=c("p.value", "statn", "all"), verbose=TRUE,
+                                    R.code.only=FALSE, clusterSize=1, estimateTime=FALSE,
+                                    nAdj2estimateTime=10)
 \S4method{qpAllCItests}{matrix}(X, I=NULL, Q=NULL, pairup.i=NULL, pairup.j=NULL,
                                 long.dim.are.variables=TRUE, exact.test=TRUE,
                                 use=c("complete.obs", "em"), tol=0.01,
