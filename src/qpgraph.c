@@ -7652,8 +7652,8 @@ ssd(double* X, int p, int n, int* Y, int n_Y, int* idx_obs, int n_idx_obs,
 
   n1 = n_idx_obs - n_mis - 1;
 
-  if (n1 < 1)
-    error("no complete observations available (n1=%d, n_idx_obs=%d, n_mis=%d)\n", n1, n_idx_obs, n_mis);
+  if (corrected && n1 < 1)
+    error("not enough complete observations available to calculate a corrected SSD matrix (n-1=%d, n_obs=%d, n_mis=%d)\n", n1, n_idx_obs, n_mis);
 
   l = 0;
   for (i=0; i < n_Y; i++)
