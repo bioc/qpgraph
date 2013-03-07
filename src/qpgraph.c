@@ -7781,10 +7781,19 @@ calculate_xtab(double* X, int p, int n, int* I, int n_I, int* n_levels, int* xta
   */
 
   for (i=0; i < n_I; i++) {
-    for (j=0; j < n; j++)
-      if (xtab[j] > 0)
-        xtab[j] = ISNA(X[j + I[i] * n]) ? -1 :
-                                          xtab[j] + base * ((int) (X[j + I[i] * n]-1.0));
+    for (j=0; j < n; j++) {
+      if (xtab[j] > 0) {
+        double level = X[j + I[i] * n];
+
+        if (ISNA(level))
+          xtab[j] = -1;
+        else {
+          if (level <= 0 || (level-((double) ((int) level))) > 0)
+            error("observation %d contains discrete levels that are not positive integers\n", j+1);
+          xtab[j] = ISNA(level) ? -1 : xtab[j] + base * ((int) (level-1.0));
+        }
+      }
+    }
     base = base * n_levels[I[i]]; /* WAS n_levels[i] */
   }
 
