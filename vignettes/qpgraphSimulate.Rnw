@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Simulate molecular regulatory networks using qpgraph}
+%\VignetteIndexEntry{Simulating molecular regulatory networks using qpgraph}
 %\VignetteKeywords{graphical Markov model, qp-graph, microarray, network, eQTL}
 %\VignettePackage{qpgraphSimulate}
 \documentclass[11pt]{article}
