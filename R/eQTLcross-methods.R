@@ -628,15 +628,16 @@ setMethod("reQTLcross", signature(n="integer", network="eQTLcross"),
             genes <- network$model$Y
             eQTLs <- graph::edges(network$g)[network$model$I]
             sim.g <- graph::subGraph(genes, network$g)
+            Ylabels <- network$model$Y ## to be used later to re-order sigma rows and columns
 
             ## additive effects per gene are the sum of additive effects from each eQTL (not yet useful!)
+            ## while additive effects are stored by eQTL it is still not possible to specify different
+            ## effects to different eQTLs
+
             network@model@a <- do.call("names<-", list(rep(0, length(genes)), genes))
             for (i in seq(along=eQTLs)) {
-              cur.a <- graph::edgeData(network@model@g, from=eQTLs[[i]], to=rep(names(eQTLs)[i], length(eQTLs[[i]])), "a")[[1]]
-              if (is.na(cur.a))
-                graph::edgeData(network@model@g, from=eQTLs[[i]], to=rep(names(eQTLs)[i], length(eQTLs[[i]])), "a") <- a
-              else
-                graph::edgeData(network@model@g, from=eQTLs[[i]], to=rep(names(eQTLs)[i], length(eQTLs[[i]])), "a") <- cur.a + a
+              graph::edgeData(network@model@g, from=eQTLs[[i]],
+                              to=rep(names(eQTLs)[i], length(eQTLs[[i]])), "a") <- a
               network@model@a[eQTLs[[i]]] <- network@model@a[eQTLs[[i]]] + a
             }
 
@@ -648,6 +649,9 @@ setMethod("reQTLcross", signature(n="integer", network="eQTLcross"),
               ## simulate conditional covariance matrix
               sim.sigma <- qpG2Sigma(g=sim.g, rho=rho, tol=tol, verbose=verbose)
               rownames(sim.sigma) <- colnames(sim.sigma) <- nodes(sim.g)
+              sim.sigma <- sim.sigma[Ylabels, Ylabels] ## put back rows and columns into the original variable order
+                                                       ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
+
               network@model@sigma <- sim.sigma
 
               sim[[i]] <- network
