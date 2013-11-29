@@ -649,8 +649,8 @@ setMethod("reQTLcross", signature(n="integer", network="eQTLcross"),
               ## simulate conditional covariance matrix
               sim.sigma <- qpG2Sigma(g=sim.g, rho=rho, tol=tol, verbose=verbose)
               rownames(sim.sigma) <- colnames(sim.sigma) <- nodes(sim.g)
-              sim.sigma <- sim.sigma[Ylabels, Ylabels] ## put back rows and columns into the original variable order
-                                                       ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
+              sim.sigma <- sim.sigma[Ylabels, Ylabels, drop=FALSE] ## put back rows and columns into the original variable order
+                                                                   ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
 
               network@model@sigma <- sim.sigma
 
