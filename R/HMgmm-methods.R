@@ -488,11 +488,13 @@ calculateCondMean <- function(x, i) {
   ## associated to a particular discrete level, i.e., from what Gaussian
   ## distribution the mean should be calculated 
   YxI <- Y[which(sapply(graph::edges(x@g, Y), function(xYk, vt) sum(vt[xYk] == "discrete"), x@vtype) > 0)]
-  mu[, YxI] <- sapply(YxI, function(Yk, i, pI, mod) {
-                               IxYk <- intersect(graph::edges(x@g)[[Yk]], I)
-                               apply(i[, IxYk, drop=FALSE], 1,
-                                     function(k) sum((k-1)*2^((length(k)-1):0)))
-                             }, i, x@pI, x)
+  if (length(YxI) > 0) {
+    mu[, YxI] <- sapply(YxI, function(Yk, i, pI, mod) {
+                                 IxYk <- intersect(graph::edges(x@g)[[Yk]], I)
+                                 apply(i[, IxYk, drop=FALSE], 1,
+                                       function(k) sum((k-1)*2^((length(k)-1):0)))
+                               }, i, x@pI, x)
+  }
 
   ## calculate canonical parameter h(i) from the homogeneous mixed graphical model
   ## by now this only works with at most one discrete variable associated to a continuous one
