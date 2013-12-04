@@ -627,8 +627,20 @@ setMethod("reQTLcross", signature(n="integer", network="eQTLcross"),
             ## simulated gene network is fixed by the input argument 'network'
             genes <- network$model$Y
             eQTLs <- graph::edges(network$g)[network$model$I]
+            n.eQTLs <- sum(sapply(eQTLs, length))
             sim.g <- graph::subGraph(genes, network$g)
             Ylabels <- network$model$Y ## to be used later to re-order sigma rows and columns
+
+            if ((class(a) == "numeric" || class(a) == "integer") && length(a) > 1 && length(a) != n.eQTL)
+              stop(sprintf("argument 'a' contains %d values of eQTL additive effects while the total number of eQTL is %d.", length(a), n.eQTL))
+
+            if (class(a) == "function" && length(formals(a)) != 1)
+              stop("when argument 'a' is a function it should contain one argument taking the number of eQTL.")
+
+            if ((class(a) == "numeric" || class(a) == "integer") && length(a) == 1)
+              a <- rep(a, times=n.eQTLs)
+            else if (class(a) == "function")
+              a <- a(n.eQTLs)
 
             ## additive effects per gene are the sum of additive effects from each eQTL (not yet useful!)
             ## while additive effects are stored by eQTL it is still not possible to specify different
