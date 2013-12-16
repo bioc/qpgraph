@@ -174,8 +174,8 @@ setMethod("rHMgmm", signature(n="integer", g="markedGraphParam"),
               nodeData(sim.g, g@Ilabels, "type") <- "discrete"
 
               sim.sigma <- qpG2Sigma(g=subGraph(g@Ylabels, sim.g), rho=rho, verbose=verbose)
-              sim.sigma <- sim.sigma[g@Ylabels, g@Ylabels] ## put back rows and columns into the original variable order
-                                                           ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
+              sim.sigma <- sim.sigma[g@Ylabels, g@Ylabels, drop=FALSE] ## put back rows and columns into the original variable order
+                                                                       ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
 
               sim[[i]] <- HMgmm(g=sim.g, dLevels=dLevels, a=a, rho=rho, sigma=sim.sigma)
             }
@@ -333,7 +333,8 @@ setMethod("rHMgmm", signature(n="integer", g="graphBAM"),
             sim <- list()
             for (i in 1:n) {
               sim.sigma <- qpG2Sigma(g=subGraph(Ylabels, g), rho=rho, verbose=verbose)
-
+              sim.sigma <- sim.sigma[Ylabels, Ylabels, drop=FALSE] ## put back rows and columns into the original variable order
+                                                                   ## since 'subgraph()' re-orders nodes alphabetically (sigh!)
               sim[[i]] <- HMgmm(g=g, dLevels=dLevels, a=a, rho=rho, sigma=sim.sigma)
             }
 
