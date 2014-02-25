@@ -1347,8 +1347,14 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
   }
   ## cat ("\n", i, "ci", j,"\n")
 
+
   I <- intersect(I, c(i, Q))
   Y <- intersect(Y, c(i, j, Q))
+
+  if (!is.na(match(i, I)))                   ## put the continuous i or j (if i is discrete)
+    Y <- c(Y[match(j, Y)], Y[-match(j, Y)])  ## as first continuous variable in the margin
+  else
+    Y <- c(Y[match(i, Y)], Y[-match(i, Y)])
 
   ssd <- ssd_i <- ssd_j <- ssd_ij <- diag(2) 
   n_co <- n <- nrow(X)
@@ -1357,6 +1363,7 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
   missingMask <- apply(X[, c(I, Y), drop=FALSE], 1, function(x) any(is.na(x)))
   missingData <- any(missingMask)
 
+  rss0 <- NA
   if (!missingData || use == "complete.obs") { ## either no missing data or use complete obs
     n_co <- n - sum(missingMask)
 
@@ -1389,6 +1396,7 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
         ## print(ssd_ij)
       }
     }
+    rss0 <- var(X[!missingMask, Y[1]])*(n_co-1)
   } else { ## missing data and should use the EM algorithm
     missingMask2 <- apply(X[, Y, drop=FALSE], 1, function(x) any(is.na(x)))
     if (length(I) == 0 || any(missingMask2))
@@ -1409,18 +1417,36 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
     ssd_i <- as.matrix(ssdMats$ssd_i)
     ssd_j <- as.matrix(ssdMats$ssd_j)
     ssd_ij <- as.matrix(ssdMats$ssd_ij)
+    rss0 <- var(X[, Y[1]])*(n-1) ## assuming there is no missing data in Y
   }
  
-  ssd <- determinant(ssd)        ## WATCH OUT! when using Matrix::determinant(..., logarithm=TRUE)
-  ssd_i <- determinant(ssd_i)    ## $modulus is always 0, don't know why. since this is its default
-  ssd_j <- determinant(ssd_j)    ## this argument is not being put explicitly in the call
-  ssd_ij <- determinant(ssd_ij)  ## keep an eye in case the default ever changes
+  ## calculate residual sums of squares for estimating effect size as partial eta-squared
+  ## assuming response continuous variable is on the first row and column
+  ## REMINDER: this might need a flag to avoid doing this calculation for the sake of speed
+  if (!is.na(match(i, I))) { ## if i is discrete, j is the response and RSS1 = SSD_i
+    if (nrow(ssd_i) > 1)
+      rss1 <- as.vector(ssd_i[1, 1] - ssd_i[1, -1] %*% solve(ssd_i[-1, -1]) %*% ssd_i[-1, 1])
+    else
+      rss1 <- as.matrix(ssd_i)[1, 1]
+  } else {                   ## otherwise, when both i, j are continuous, i is the response and RSS1 = SSD_j
+    if (nrow(ssd_j) > 1)
+      rss1 <- as.vector(ssd_j[1, 1] - ssd_j[1, -1] %*% solve(ssd_j[-1, -1]) %*% ssd_j[-1, 1])
+    else
+      rss1 <- as.matrix(ssd_j)[1, 1]
+  }
+
+  if (nrow(ssd) > 1)
+    rss2 <- as.vector(ssd[1, 1] - ssd[1, -1] %*% solve(ssd[-1, -1]) %*% ssd[-1, 1])
+  else
+    rss2 <- as.matrix(ssd)[1, 1]
+
+  ssd <- determinant(ssd)         ## WATCH OUT! when using Matrix::determinant(..., logarithm=TRUE)
+  ssd_i <- determinant(ssd_i)     ## $modulus is always 0, don't know why. since this is its default
+  ssd_j <- determinant(ssd_j)     ## this argument is not being put explicitly in the call
+  ssd_ij <- determinant(ssd_ij)   ## keep an eye in case the default ever changes
   final_sign <- ssd$sign * ssd_ij$sign * ssd_j$sign *ssd_i$sign
 
-  ## lr <- -n * log((det(ssd) * det(ssd_ij)) / 
-  ##               (det(ssd_j) * det(ssd_i)))
-
-  lr <- NaN
+  lr <- parEta2hat <- NaN
   p.value <- df <- a <- b <- NA
   stat <- param <- n.value <- method <- alt <- NA
 
@@ -1432,8 +1458,11 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
     nGamma <- length(Y)
     Delta <- I
     DeltaStar <- setdiff(I, c(i, j))
+    llr <- ssd$modulus[1]+ssd_ij$modulus[1]-ssd_j$modulus[1]-ssd_i$modulus[1] ## log-likelihood ratio
+    parEta2hat <- (rss1 - rss2) / rss0
+    names(parEta2hat) <- "partial eta2"
     if (exact.test) {
-      lr <- exp(ssd$modulus[1]+ssd_ij$modulus[1]-ssd_j$modulus[1]-ssd_i$modulus[1])
+      lr <- exp(llr)
       a <- (n_co-nGamma-prod(nLevels[Delta])+1)/2 ## by now missing data w/ complete.obs
       b <- ifelse(mixedEdge,
                   prod(nLevels[DeltaStar])*(nLevels[intersect(Delta, c(i,j))]-1)/2,
@@ -1451,7 +1480,7 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
       method  <- "Conditional independence test for homogeneous mixed data using an exact likelihood ratio test"
       alt <- "less"
     } else {
-      lr <- -n_co * (ssd$modulus[1]+ssd_ij$modulus[1]-ssd_j$modulus[1]-ssd_i$modulus[1])
+      lr <- -n_co * llr
       df <- 1
       if (mixedEdge)
         df <- prod(nLevels[DeltaStar])*(nLevels[intersect(Delta, c(i, j))]-1)
@@ -1468,7 +1497,7 @@ convergence <- function(Sigma_update, mu_update, m_update, Sigma, mu, m) {
   RVAL <- list(statistic=stat,
                parameter=param,
                p.value=if (use != "em") p.value else NA_real_, ## p-values currently not valid with EM
-               estimate=NULL,
+               estimate=parEta2hat,
                null.value=n.value,
                alternative=alt,
                method=method,
