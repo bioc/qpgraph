@@ -3392,7 +3392,7 @@ qp_ci_test_opt(double* S, int n_var, int N, int i, int j, int* Q, int q,
   Free(Sqbyij);
   cov2cor(par_cor, par_cov, 2);
   Free(par_cov);
-  betahat = sqrt(N - q -2) * par_cor[2];
+  betahat = sqrt(N - q - 2) * par_cor[2];
   se = sqrt(1.0 - par_cor[2] * par_cor[2]);
 
   if (beta != NULL)
@@ -5087,12 +5087,13 @@ qp_edge_nrr(double* X, double* S, int p, int n, int i, int j, int q,
 
   for (k = 0; k < nTests; k++) {
     double t_value;
+    int    n_co;
 
     if (work_with_margin) {
       Memcpy((int*) (ijQ+2), (int*) (q_by_T_samples+k*q), (size_t) q);
       memset(S, 0, sizeof(double) * n_upper_tri);
-      n = ssd(X, p, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
-      t_value = qp_ci_test_std(S, q+2, n, 0, 1, Q, q, NULL);
+      n_co = ssd(X, p, n, ijQ, q+2, NULL, n, TRUE, NULL, S);
+      t_value = qp_ci_test_std(S, q+2, n_co, 0, 1, Q, q, NULL);
     } else
       t_value = qp_ci_test_std(S, p, n, i, j, (int*) (q_by_T_samples+k*q), q, NULL);
 

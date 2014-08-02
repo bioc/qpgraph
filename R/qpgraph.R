@@ -1717,10 +1717,10 @@ setMethod("qpEdgeNrr", signature(X="smlSet"),
                 all(c(i, j, restrict.Q, fix.Q) <= ph)) { ## only continuous variables are
                                                          ## involved in the calculations
               V <- c(i, j, setdiff(restrict.Q, c(i, j)), fix.Q)
+              restrict.Q <- match(restrict.Q, V)
+              fix.Q <- match(fix.Q, V)
               i <- 1L
               j <- 2L
-              restrict.Q <- 2L+seq(along=setdiff(restrict.Q, c(i, j)))
-              fix.Q <- 2L+length(restrict.Q)+seq(along=fix.Q)
 
               ## S <- qpCov(XEP[, V, drop=FALSE]) ## here is faster to calculate S for each margin
               S <- NULL
@@ -1875,10 +1875,10 @@ setMethod("qpEdgeNrr", signature(X="ExpressionSet"),
               V <- 1:p
               if (!is.null(restrict.Q)) {
                 V <- c(i, j, setdiff(restrict.Q, c(i, j)), fix.Q)
+                restrict.Q <- match(restrict.Q, V)
+                fix.Q <- match(fix.Q, V)
                 i <- 1L
                 j <- 2L
-                restrict.Q <- 2L+seq(along=setdiff(restrict.Q, c(i, j)))
-                fix.Q <- 2L+length(restrict.Q)+seq(along=fix.Q)
               }
 
               ## S <- qpCov(X[, V, drop=FALSE]) ## here is faster to calculate S for each margin
@@ -1961,10 +1961,10 @@ setMethod("qpEdgeNrr", signature(X="data.frame"),
               V <- 1:p
               if (!is.null(restrict.Q)) {
                 V <- c(i, j, setdiff(restrict.Q, c(i, j)), fix.Q)
+                restrict.Q <- match(restrict.Q, V)
+                fix.Q <- match(fix.Q, V)
                 i <- 1L
                 j <- 2L
-                restrict.Q <- 2L+seq(along=setdiff(restrict.Q, c(i, j)))
-                fix.Q <- 2L+length(restrict.Q)+seq(along=fix.Q)
               }
 
               ## S <- qpCov(X[, V, drop=FALSE]) ## here is faster to calculate S for each margin
@@ -2047,10 +2047,10 @@ setMethod("qpEdgeNrr", signature(X="matrix"),
               V <- 1:p
               if (!is.null(restrict.Q)) {
                 V <- c(i, j, setdiff(restrict.Q, c(i, j)), fix.Q)
+                restrict.Q <- match(restrict.Q, V)
+                fix.Q <- match(fix.Q, V)
                 i <- 1L
                 j <- 2L
-                restrict.Q <- 2L+seq(along=setdiff(restrict.Q, c(i, j)))
-                fix.Q <- 2L+length(restrict.Q)+seq(along=fix.Q)
               }
 
               ## S <- qpCov(X[, V, drop=FALSE]) ## here is faster to calculate S for each margin
@@ -2137,6 +2137,9 @@ setMethod("qpEdgeNrr", signature(X="SsdMatrix"),
   if (q < 0)
     stop(paste("q=", q, " < 0"))
 
+  if (q > p-2)
+    stop(paste("q=", q, " > p-2=", p-2))
+
   if (q > n-3)
     stop(paste("q=", q, " > n-3=", n-3))
 
@@ -2207,7 +2210,7 @@ setMethod("qpEdgeNrr", signature(X="SsdMatrix"),
 
 ## IMPORTANT: .qpEdgeNrr() assumes that .processParameters() has been
 ##            previously called and all arguments related to variables
-##            com as integers
+##            come as integers
 .qpEdgeNrr <- function(X, S, i=1, j=2, q=1, restrict.Q=NULL, fix.Q=NULL,
                        nTests=100, alpha=0.05, R.code.only=FALSE) {
 
@@ -2247,7 +2250,7 @@ setMethod("qpEdgeNrr", signature(X="SsdMatrix"),
   for (k in 1:nTests) {
     Q <- c(sample(V, q-q.fix, replace=FALSE), fix.Q)
     if (work.with.margin) {
-      S <- qpgraph::qpCov(X[, c(i, j, Q)], corrected=TRUE)
+      S <- qpCov(X[, c(i, j, Q)], corrected=TRUE)
       cit <- .qpCItest(S, 1L, 2L, Qm, R.code.only=TRUE)
     } else
       cit <- .qpCItest(S, as.integer(i), as.integer(j),
