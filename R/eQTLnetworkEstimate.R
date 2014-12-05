@@ -322,7 +322,7 @@ setMethod("eQTLnetworkEstimate", signature=c(param="eQTLnetworkEstimationParam",
                                     to=rep(names(edg), times=elen))
                 keepMask <- !paste(mgedg$from, mgedg$to, sep="__") %in% paste(rmedg$from, rmedg$to, sep="__")
                 mgedg <- mgedg[keepMask, ]
-                qpg@g <- graphBAM(rbind(ggedg, mgedg, stringsAsFactors=FALSE))
+                qpg@g <- graphBAM(rbind(ggedg, mgedg))
               }
             }
 
