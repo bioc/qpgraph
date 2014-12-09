@@ -2,7 +2,7 @@
 \alias{qpHTF}
 
 \title{
-Hastie Tibshirani Friedman algorithm
+Hastie Tibshirani Friedman iterative regression algorithm
 }
 \description{
 Performs maximum likelihood estimation of a covariance matrix
@@ -48,9 +48,11 @@ Gaussian graphical model search from microarray data with p larger than n.
 
 Hastie, T., Tibshirani, R. and Friedman, J.H. \emph{The Elements of Statistical Learning}, Springer, 2009.
 
+Tur, I., Roverato, A. and Castelo, R. Mapping eQTL networks with mixed graphical Markov models.
+\emph{Genetics}, 198(4):1377-1393, 2014.
+
 Whittaker, J. \emph{Graphical Models in Applied Multivariate Statistics.}
 Wiley, 1990.
-
 }
 \note{
 Thanks to Giovanni Marchetti for bringing us our attention to this algorithm and
