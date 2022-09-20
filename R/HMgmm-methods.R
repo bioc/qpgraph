@@ -104,7 +104,7 @@ setMethod("HMgmm", signature(g="graphBAM"),
             }
 
             new("HMgmm", pI=pI, pY=pY, g=g, vtype=vtype, dLevels=dLevels, a=a,
-                rho=rho, sigma=as(as(as(sigma, "dMatrix"), "symmetricMatrix"), "packedMatrix"),
+                rho=rho, sigma=pack(as(sigma, "denseMatrix"), symmetric=TRUE),
                 eta2=new.env(parent=emptyenv()))
           })
 

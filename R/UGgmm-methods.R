@@ -69,9 +69,9 @@ setMethod("UGgmm", signature(g="matrix"),
 
 setMethod("UGgmm", signature(g="graphBAM"),
           function(g, mean=rep(0, graph::numNodes(g)),
-                   sigma=diag(graph::numNodes(g)), verbose=FALSE) {
+                   sigma=diag(as.numeric(graph::numNodes(g))), verbose=FALSE) {
             new("UGgmm", p=length(mean), g=g, mean=mean,
-                sigma=as(as(as(sigma, "dMatrix"), "symmetricMatrix"), "packedMatrix"))
+                sigma=pack(as(sigma, "denseMatrix"), symmetric=TRUE))
           })
 
 ## constructor simulation methods

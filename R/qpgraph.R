@@ -741,7 +741,7 @@ setMethod("qpNrr", signature(X="matrix"),
   }
 
   ## this is necessary till we find out how to properly assign values in a dspMatrix
-  nrrMatrix <- as(as(as(nrrMatrix, "dMatrix"), "symmetricMatrix"), "packedMatrix")
+  nrrMatrix <- pack(as(nrrMatrix, "denseMatrix"), symmetric=TRUE)
 
   if (elapsedTime > 0) {
     elapsedTime <- elapsedTime + (proc.time()-startTime)["elapsed"]
@@ -879,7 +879,7 @@ setMethod("qpNrr", signature(X="matrix"),
   }
 
   ## this is necessary till we find out how to properly assign values in a dspMatrix
-  nrrMatrix <- as(as(as(nrrMatrix, "dMatrix"), "symmetricMatrix"), "packedMatrix")
+  nrrMatrix <- pack(as(nrrMatrix, "denseMatrix"), symmetric=TRUE)
 
   if (elapsedTime > 0) {
     elapsedTime <- elapsedTime + (proc.time()-startTime)["elapsed"]
@@ -1128,7 +1128,8 @@ setMethod("qpAvgNrr", signature(X="matrix"),
       startTime <- proc.time()
     } else {
       ## this is necessary till we find out how to sum two dspMatrices getting a dspMatrix
-      avgNrrMatrix <- as(as(as(avgNrrMatrix + w * thisNrr, "dMatrix"), "symmetricMatrix"), "packedMatrix")
+      avgNrrMatrix <- pack(as(avgNrrMatrix + w * thisNrr, "denseMatrix"),
+                           symmetric=TRUE)
     }
   }
 
@@ -1492,7 +1493,8 @@ setMethod("qpGenNrr", signature(X="matrix"),
       startTime <- proc.time()
     } else {
       ## this is necessary till we find out how to sum two dspMatrices getting a dspMatrix
-      result[["genNrr"]] <- as(as(as(result[["genNrr"]] + w[idx] * thisNrr, "dMatrix"), "symmetricMatrix"), "packedMatrix")
+      result[["genNrr"]] <- pack(as(result[["genNrr"]] + w[idx] * thisNrr, "denseMatrix"),
+                                 symmetric=TRUE)
 
       if (return.all)
         result[[as.character(idx)]] <- thisNrr
@@ -1999,7 +2001,8 @@ setMethod("qpEdgeCor", signature(X="UGgmm"),
               stop("R.code.only=TRUE is not implemented yet.")
 
             ssd <- new("SsdMatrix",
-                       ssd=as(as(as(X$sigma, "dMatrix"), "symmetricMatrix"), "packedMatrix"), n=NA_real_)
+                       ssd=pack(as(X$sigma, "denseMatrix"), symmetric=TRUE),
+                       n=NA_real_)
             matrix(data=.qpEdgeNrr(NULL, ssd, i, j, q, restrict.Q, fix.Q, nTests,
                                    alpha, return.pcor=TRUE, R.code.only),
                    nrow=nTests, ncol=q+2, dimnames=list(NULL, c("pcor", "pval", paste0("Q", 1:q))))
@@ -3236,7 +3239,7 @@ qpIPF <- function(vv, clqlst, tol = 0.001, verbose = FALSE,
       cat("qpIPF: precision =", precision, "\n")
   }
 
-  return(as(as(as(V, "dMatrix"), "symmetricMatrix"), "packedMatrix"))
+  return(pack(as(V, "denseMatrix"), symmetric=TRUE))
 }
 
 
@@ -3328,7 +3331,8 @@ qpHTF <- function(S, g, tol = 0.001, verbose = FALSE,
   }
 
   if (inputisdspmatrix)
-    W <- as(as(as(W, "dMatrix"), "symmetricMatrix"), "packedMatrix")
+    W <- pack(as(W, "denseMatrix"), symmetric=TRUE)
+
   return(W)
 }
 
@@ -3463,12 +3467,16 @@ setMethod("qpPAC", signature(X="matrix"),
   list2return <- list()
 
   if (return.K)
-    list2return <- list(R=as(as(as(forceSymmetric(rho_coef), "dMatrix"), "symmetricMatrix"), "packedMatrix"),
-                        P=as(as(as(forceSymmetric(p.values), "dMatrix"), "symmetricMatrix"), "packedMatrix"),
+    list2return <- list(R=pack(as(forceSymmetric(rho_coef), "denseMatrix"),
+                               symmetric=TRUE),
+                        P=pack(as(forceSymmetric(p.values), "denseMatrix"),
+                               symmetric=TRUE),
                         K=Matrix(K))
   else
-    list2return <- list(R=as(as(as(forceSymmetric(rho_coef), "dMatrix"), "symmetricMatrix"), "packedMatrix"),
-                        P=as(as(as(forceSymmetric(p.values), "dMatrix"), "symmetricMatrix"), "packedMatrix"))
+    list2return <- list(R=pack(as(forceSymmetric(rho_coef), "denseMatrix"),
+                               symmetric=TRUE),
+                        P=pack(as(forceSymmetric(p.values), "denseMatrix"),
+                               symmetric=TRUE))
 
   return(list2return)
 }
@@ -3534,7 +3542,7 @@ setMethod("qpPCC", signature(X="matrix"),
 
   ## estimate PCCs by scaling the covariance matrix
   ## somehow Matrix::cov2cor() refuses to scale non-positive definite matrices stored as dspMatrix objects (?)
-  R <- as(as(as(Matrix::cov2cor(as.matrix(S)), "dMatrix"), "symmetricMatrix"), "packedMatrix")
+  R <- pack(as(Matrix::cov2cor(as.matrix(S)), "denseMatrix"), symmetric=TRUE)
 
   ## calculate t-statistics
   T <- (N - 2) / (1 - R*R)
@@ -3543,7 +3551,7 @@ setMethod("qpPCC", signature(X="matrix"),
 
   ## calculate two-sided p-values
   p <- pt(as.matrix(T), df=N - 2)
-  P <- as(as(as(2 * pmin(p, 1 - p), "dMatrix"), "symmetricMatrix"), "packedMatrix")
+  P <- pack(as(2 * pmin(p, 1-p), "denseMatrix"), symmetric=TRUE)
 
   list(R=R, P=P)
 }
