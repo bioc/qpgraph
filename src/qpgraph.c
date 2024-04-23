@@ -6146,7 +6146,7 @@ qp_clique_number_lb(SEXP A, SEXP return_vertices, SEXP approx_iter, SEXP verbose
         if (pct % 10 == 0)
           Rprintf("%d",pct);
         else
-          Rprintf(".",pct);
+          Rprintf(".");
         R_FlushConsole();
       }
 
@@ -6824,7 +6824,7 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
         if (pct % 10 == 0)
           Rprintf("%d",pct);
         else
-          Rprintf(".",pct);
+          Rprintf(".");
         R_FlushConsole();
 #ifdef Win32
         R_ProcessEvents();
@@ -7087,7 +7087,7 @@ qp_fast_ipf(SEXP vvR, SEXP clqlstR, SEXP tolR, SEXP verbose) {
         Vold[i+n*j] = V[i+n*j];
 
     if (INTEGER(verbose)[0])
-      Rprintf("Iterating through cliques (%): ");
+      Rprintf("Iterating through cliques (%%): ");
 
     ppct = -1;
     for (i=fstclq;i<nclqlst;i++) {
@@ -7112,7 +7112,7 @@ qp_fast_ipf(SEXP vvR, SEXP clqlstR, SEXP tolR, SEXP verbose) {
           if (pct % 10 == 0)
             Rprintf("%d",pct);
           else
-            Rprintf(".",pct);
+            Rprintf(".");
           R_FlushConsole();
         }
 
@@ -7370,7 +7370,7 @@ qp_fast_htf(SEXP SR, SEXP AR, SEXP tolR, SEXP verbose) {
           if (pct % 10 == 0)
             Rprintf("%d",pct);
           else
-            Rprintf(".",pct);
+            Rprintf(".");
           R_FlushConsole();
         }
 
