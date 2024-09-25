@@ -100,7 +100,7 @@ void graph_resize(graph_t *g, int size) {
 	for (i=size; i < g->n; i++)
 		set_free(g->edges[i]);
 	/* g->edges=realloc(g->edges, size * sizeof(set_t)); */
-	g->edges=Realloc(g->edges, size, set_t);
+	g->edges=R_Realloc(g->edges, size, set_t);
 	for (i=g->n; i < size; i++)
 		g->edges[i]=set_new(size);
 
@@ -111,7 +111,7 @@ void graph_resize(graph_t *g, int size) {
 
 	/* Weights */
 	/* g->weights=realloc(g->weights,size * sizeof(int)); */
-	g->weights=Realloc(g->weights, size, int);
+	g->weights=R_Realloc(g->weights, size, int);
 	for (i=g->n; i<size; i++)
 		g->weights[i]=1;
 	

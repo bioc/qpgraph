@@ -1,9 +1,6 @@
 /*
- * All malloc/free calls have been changed to the R_alloc
- * construct from the R-system and all calloc/free calls
- * have been changed to the Calloc/Free construct also from
- * the R-system such that R takes over the management of the
- * memory allocation. Robert Castelo (17/11/2008)
+ * All Calloc/Free calls have been changed to the R_Calloc/R_Free
+ * construct from the R-system. Robert Castelo (25/09/2024)
 */
 
 /*
@@ -161,7 +158,7 @@ static set_t set_new(int size) {
 
 	n=(size/ELEMENTSIZE+1)+1;
 	/* s=calloc(n,sizeof(setelement)); */
-	s=Calloc(n, setelement);
+	s=R_Calloc(n, setelement);
 	s[0]=size;
 
 	return &(s[1]);
@@ -178,7 +175,7 @@ static void set_free(set_t s) {
 	ASSERT(s!=NULL);
 	/* free(&(s[-1])); */
 	s2=&(s[-1]);
-	Free(s2);
+	R_Free(s2);
 }
 
 /*
@@ -197,7 +194,7 @@ static set_t set_resize(set_t s, int size) {
 
 	n=(size/ELEMENTSIZE+1);
 	/* s=((setelement *)realloc(s-1,(n+1)*sizeof(setelement)))+1; */
-	s=Realloc(s-1, (n+1), setelement)+1;
+	s=R_Realloc(s-1, (n+1), setelement)+1;
 
 	if (n>SET_ARRAY_LENGTH(s))
 		memset(s+SET_ARRAY_LENGTH(s),0,

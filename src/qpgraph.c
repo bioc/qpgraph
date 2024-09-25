@@ -102,7 +102,7 @@ static SEXP installAttrib(SEXP vec, SEXP name, SEXP val)
       return val;
     }
   }
-  s = allocList(1);
+  s = Rf_allocList(1);
   SETCAR(s, val);
   SET_TAG(s, name);
   if (ATTRIB(vec) == R_NilValue)
@@ -540,21 +540,21 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
 
   if (n_I == 0) {
     if (!missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N)) {
-      S = ssdMat = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, N, NULL, n_var, NULL, N, TRUE, NULL, S);
     } else
       work_with_margin = TRUE;
   } else {
-    I = Calloc(n_I, int);
+    I = R_Calloc(n_I, int);
     for (i=0; i < n_I; i++)
       I[i] = INTEGER(IR)[i]-1;
 
-    Y = Calloc(n_Y, int);
+    Y = R_Calloc(n_Y, int);
     for (i=0; i < n_Y; i++)
       Y[i] = INTEGER(YR)[i]-1;
 
     if (!missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N)) {
-      mapX2ssd = Calloc(n_var, int);
+      mapX2ssd = R_Calloc(n_var, int);
       for (i=0; i < n_var; i++) {
         j = 0;
         while (j < n_Y && i != Y[j])
@@ -563,7 +563,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
         mapX2ssd[i] = j;
       }
 
-      S = ssdMat = Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, N, Y, n_Y, NULL, N, FALSE, NULL, ssdMat);
     } else
       work_with_margin = TRUE;
@@ -574,10 +574,10 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
       if (n_I == 0)
         error("restrict.Q as a matrix can only be employed for restricting conditioning of discrete variables\n");
       isMatrix_restrictQ = TRUE;
-      restrictQ = Calloc(n_var, int);
+      restrictQ = R_Calloc(n_var, int);
     } else {
       n_rQ = length(restrictQR);
-      restrictQ = Calloc(n_rQ, int);
+      restrictQ = R_Calloc(n_rQ, int);
       for (i=0; i < n_rQ; i++)
         restrictQ[i] = INTEGER(restrictQR)[i] - 1;
     }
@@ -585,13 +585,13 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
 
   if (fixQR != R_NilValue) {
     n_fQ = length(fixQR);
-    fixQ = Calloc(n_fQ, int);
+    fixQ = R_Calloc(n_fQ, int);
     for (i=0; i < n_fQ; i++)
       fixQ[i] = INTEGER(fixQR)[i] - 1;
   }
 
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -622,8 +622,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
   k = 0;
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("txtProgressBar")); t=CDR(t);
     SETCAR(t, ScalarInteger(3));
     SET_TAG(t, install("style"));
@@ -663,8 +662,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
       if (pct != ppct) {
         if (verbose && startTime == 0) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
           SETCAR(t, pb);
           SET_TAG(t, install("pb")); t=CDR(t);
@@ -688,7 +686,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   /* i-exclusive variables against j-exclusive variables */
   if (startTime == 0 || k < nAdjEtime) {
@@ -723,8 +721,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -781,8 +778,7 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -807,25 +803,24 @@ qp_fast_nrr(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR, SEXP restrictQR,
   }
 
   if (!work_with_margin)
-    Free(S); /* = Free(ssdMat) */
+    R_Free(S); /* = R_Free(ssdMat) */
 
   if (n_I > 0) {
     if (!work_with_margin)
-      Free(mapX2ssd);
-    Free(Y);
-    Free(I);
+      R_Free(mapX2ssd);
+    R_Free(Y);
+    R_Free(I);
   }
 
   if (restrictQR != R_NilValue)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (fixQR != R_NilValue)
-    Free(fixQ);
+    R_Free(fixQ);
 
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("close")); t=CDR(t);
     SETCAR(t, pb);
     eval(s, R_GlobalEnv);
@@ -942,38 +937,38 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
   if (missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N))
     error("Missing values present in the data. The current setting identicalQs=TRUE speeds up calculations as long as data is complete. Please set identicalQs=FALSE or discard variables and/or observations with missing values from the input data.\n");
 
-  S = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+  S = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
   ssd(REAL(XR), n_var, N, NULL, n_var, NULL, N, TRUE, NULL, S);
 
   if (n_rQ > 0) {
-    restrictQ = Calloc(n_rQ, int);
+    restrictQ = R_Calloc(n_rQ, int);
     for (i=0; i < n_rQ; i++)
       restrictQ[i] = INTEGER(restrictQR)[i] - 1;
   }
 
   if (n_fQ > 0) {
-    fixQ = Calloc(n_fQ, int);
+    fixQ = R_Calloc(n_fQ, int);
     for (i=0; i < n_fQ; i++)
       fixQ[i] = INTEGER(fixQR)[i] - 1;
   }
 
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
 
   /* sample the Q sets and pre-calculate the inverse matrices */
 
-  q_by_T_samples = Calloc(q * nTests, int);
+  q_by_T_samples = R_Calloc(q * nTests, int);
 
   if (n_rQ == 0)
     sampleQs(nTests, q, -1, -1, n_var, NULL, fixQ, n_fQ, q_by_T_samples);
   else
     sampleQs(nTests, q, -1, -1, n_rQ, restrictQ, fixQ, n_fQ, q_by_T_samples);
 
-  Qmat = Calloc(q*q, double);
-  Qinv = Calloc(q*q*nTests, double);
+  Qmat = R_Calloc(q*q, double);
+  Qinv = R_Calloc(q*q*nTests, double);
 
   /* ** DEPRECATED NON-TRIANGULAR COVARIANCE MATRIX MANIPULATION **
   for (i=0; i < nTests; i++) {
@@ -996,10 +991,10 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
     }
     matinv((double*) (Qinv+i*q*q), Qmat, q, 0);
   }
-  Free(Qmat);
+  R_Free(Qmat);
   
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -1030,8 +1025,7 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
   k = 0;
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("txtProgressBar")); t=CDR(t);
     SETCAR(t, ScalarInteger(3));
     SET_TAG(t, install("style"));
@@ -1055,8 +1049,7 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
       if (pct != ppct) {
         if (verbose && startTime == 0) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
           SETCAR(t, pb);
           SET_TAG(t, install("pb")); t=CDR(t);
@@ -1080,7 +1073,7 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   /* i-exclusive variables against j-exclusive variables */
   if (startTime == 0 || k < nAdjEtime) {
@@ -1099,8 +1092,7 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -1141,8 +1133,7 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -1166,19 +1157,18 @@ qp_fast_nrr_identicalQs(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR, SEXP nTes
     }
   }
 
-  Free(S);
-  Free(Qinv);
+  R_Free(S);
+  R_Free(Qinv);
 
   if (restrictQR != R_NilValue)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (fixQR != R_NilValue)
-    Free(fixQ);
+    R_Free(fixQ);
 
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("close")); t=CDR(t);
     SETCAR(t, pb);
     eval(s, R_GlobalEnv);
@@ -1325,20 +1315,20 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
 
   if (n_I == 0) {
     if (!missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N)) {
-      S = ssdMat = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, N, NULL, n_var, NULL, N, TRUE, NULL, S);
     }
   } else {
-    I = Calloc(n_I, int);
+    I = R_Calloc(n_I, int);
     for (i=0; i < n_I; i++)
       I[i] = INTEGER(IR)[i]-1;
 
-    Y = Calloc(n_Y, int);
+    Y = R_Calloc(n_Y, int);
     for (i=0; i < n_Y; i++)
       Y[i] = INTEGER(YR)[i]-1;
 
     if (!missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N)) {
-      mapX2ssd = Calloc(n_var, int);
+      mapX2ssd = R_Calloc(n_var, int);
       for (i=0; i < n_var; i++) {
         j = 0;
         while (j < n_Y && i != Y[j])
@@ -1347,7 +1337,7 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
         mapX2ssd[i] = j;
       }
 
-      S = ssdMat = Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, N, Y, n_Y, NULL, N, FALSE, NULL, ssdMat);
     }
   }
@@ -1355,10 +1345,10 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
   if (restrictQR != R_NilValue) {
     if (isMatrix(restrictQR)) {
       isMatrix_restrictQ = TRUE;
-      restrictQ = Calloc(n_var, int);
+      restrictQ = R_Calloc(n_var, int);
     } else {
       n_rQ = length(restrictQR);
-      restrictQ = Calloc(n_rQ, int);
+      restrictQ = R_Calloc(n_rQ, int);
       for (i=0; i < n_rQ; i++)
         restrictQ[i] = INTEGER(restrictQR)[i] - 1;
     }
@@ -1366,13 +1356,13 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
 
   if (fixQR != R_NilValue) {
     n_fQ = length(fixQR);
-    fixQ = Calloc(n_fQ, int);
+    fixQ = R_Calloc(n_fQ, int);
     for (i=0; i < n_fQ; i++)
       fixQ[i] = INTEGER(fixQR)[i] - 1;
   }
 
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -1457,8 +1447,7 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -1478,7 +1467,7 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   if (k <= lastAdj && k < l_int * (l_ini + l_jni) + l_ini * l_jni &&
       (startTime == 0 || k-firstAdj < nAdjEtime)) {
@@ -1518,8 +1507,7 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -1576,8 +1564,7 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
         pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
         if (pct != ppct) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("sendData")); t=CDR(t);
           SETCAR(t, masterNode);
           SET_TAG(t, install("node")); t=CDR(t);
@@ -1592,21 +1579,21 @@ qp_fast_nrr_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP qR,
     }
   }
 
-  Free(S); /* = Free(ssdMat) */
+  R_Free(S); /* = R_Free(ssdMat) */
 
   if (n_I > 0) {
     if (restrictQR != R_NilValue)
-      Free(restrictQ);
-    Free(mapX2ssd);
-    Free(Y);
-    Free(I);
+      R_Free(restrictQ);
+    R_Free(mapX2ssd);
+    R_Free(Y);
+    R_Free(I);
   }
 
   if (restrictQR != R_NilValue)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (fixQR != R_NilValue)
-    Free(fixQ);
+    R_Free(fixQ);
 
   if (startTime > 0) {
     SEXP procTimeR;
@@ -1720,24 +1707,24 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
   if (missing_obs(REAL(XR), n_var, N, NULL, n_var, NULL, N))
     error("Missing values present in the data. The current setting identicalQs=TRUE speeds up calculations as long as data is complete. Please set identicalQs=FALSE or discard variables and/or observations with missing values from the input data.\n");
 
-  S = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+  S = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
   ssd(REAL(XR), n_var, N, NULL, n_var, NULL, N, TRUE, NULL, S);
 
   if (n_rQ > 0) {
-    restrictQ = Calloc(n_rQ, int);
+    restrictQ = R_Calloc(n_rQ, int);
     for (i=0; i < n_rQ; i++)
       restrictQ[i] = INTEGER(restrictQR)[i] - 1;
   }
 
   if (n_fQ > 0) {
-    fixQ = Calloc(n_fQ, int);
+    fixQ = R_Calloc(n_fQ, int);
     for (i=0; i < n_fQ; i++)
       fixQ[i] = INTEGER(fixQR)[i] - 1;
   }
 
   /* sample the Q sets and pre-calculate the inverse matrices */
 
-  q_by_T_samples = Calloc(q * nTests, int);
+  q_by_T_samples = R_Calloc(q * nTests, int);
 
   if (n_rQ == 0)
     sampleQs(nTests, q, -1, -1, n_var, NULL, fixQ, n_fQ, q_by_T_samples);
@@ -1745,8 +1732,8 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
     sampleQs(nTests, q, -1, -1, n_rQ, restrictQ, fixQ, n_fQ, q_by_T_samples);
 
 
-  Qmat = Calloc(q*q, double);
-  Qinv = Calloc(q*q*nTests, double);
+  Qmat = R_Calloc(q*q, double);
+  Qinv = R_Calloc(q*q*nTests, double);
 
   /* ** DEPRECATED NON-TRIANGULAR COVARIANCE MATRIX MANIPULATION **
   for (i=0; i < nTests; i++) {
@@ -1768,10 +1755,10 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
     }
     matinv((double*) (Qinv+i*q*q), Qmat, q, 0);
   }
-  Free(Qmat);
+  R_Free(Qmat);
   
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -1840,8 +1827,7 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -1861,7 +1847,7 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   if (k <= lastAdj && k < l_int * (l_ini + l_jni) + l_ini * l_jni &&
       (startTime == 0 || k-firstAdj < nAdjEtime)) {
@@ -1885,8 +1871,7 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -1927,8 +1912,7 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
         pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
         if (pct != ppct) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("sendData")); t=CDR(t);
           SETCAR(t, masterNode);
           SET_TAG(t, install("node")); t=CDR(t);
@@ -1943,14 +1927,14 @@ qp_fast_nrr_identicalQs_par(SEXP XR, SEXP qR, SEXP restrictQR, SEXP fixQR,
     }
   }
 
-  Free(S);
-  Free(Qinv);
+  R_Free(S);
+  R_Free(Qinv);
 
   if (restrictQR != R_NilValue)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (fixQR != R_NilValue)
-    Free(fixQ);
+    R_Free(fixQ);
 
   if (startTime > 0) {
     SEXP procTimeR;
@@ -2032,21 +2016,21 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
 
   if (n_I == 0) {
     if (!missing_obs(REAL(XR), n_var, n, NULL, n_var, NULL, n)) {
-      S = ssdMat = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, n, NULL, n_var, NULL, n, TRUE, NULL, S);
     } else
       work_with_margin = TRUE;
   } else {
-    I = Calloc(n_I, int);
+    I = R_Calloc(n_I, int);
     for (i=0; i < n_I; i++)
       I[i] = INTEGER(IR)[i]-1;
 
-    Y = Calloc(n_Y, int);
+    Y = R_Calloc(n_Y, int);
     for (i=0; i < n_Y; i++)
       Y[i] = INTEGER(YR)[i]-1;
 
     if (!missing_obs(REAL(XR), n_var, n, NULL, n_var, NULL, n)) {
-      mapX2ssd = Calloc(n_var, int);
+      mapX2ssd = R_Calloc(n_var, int);
       for (i=0; i < n_var; i++) {
         j = 0;
         while (j < n_Y && i != Y[j])
@@ -2055,7 +2039,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
         mapX2ssd[i] = j;
       }
 
-      S = ssdMat = Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, n, Y, n_Y, NULL, n, FALSE, NULL, ssdMat);
     } else
       work_with_margin = TRUE;
@@ -2074,9 +2058,9 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       error("q=%d > n-3=%d", q, n-3);
 
     if (work_with_margin)
-      ijQ = Calloc(q+2, int); /* stores the indices of the variables in the {i, j, Q} margin */
+      ijQ = R_Calloc(q+2, int); /* stores the indices of the variables in the {i, j, Q} margin */
 
-    Q = Calloc(q, int);
+    Q = R_Calloc(q, int);
     for (i=0; i < q; i++)
       if (work_with_margin) {
         ijQ[i+2] = INTEGER(QR)[i] - 1;
@@ -2084,15 +2068,15 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       } else
         Q[i] = INTEGER(QR)[i] - 1;
   } else
-    ijQ = Calloc(2, int);
+    ijQ = R_Calloc(2, int);
 
   n_upper_tri = ( (q+2) * ((q+2)+1) ) / 2; /* this upper triangle includes the diagonal */
 
   if (work_with_margin)
-    S = Calloc(n_upper_tri, double);
+    S = R_Calloc(n_upper_tri, double);
 
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -2151,8 +2135,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
   k = 0;
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("txtProgressBar")); t=CDR(t);
     SETCAR(t, ScalarInteger(3));
     SET_TAG(t, install("style"));
@@ -2216,8 +2199,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       if (pct != ppct) {
         if (verbose && startTime == 0) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
           SETCAR(t, pb);
           SET_TAG(t, install("pb")); t=CDR(t);
@@ -2241,7 +2223,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   /* i-exclusive variables against j-exclusive variables */
   if (startTime == 0 || k < nAdjEtime) {
@@ -2300,8 +2282,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -2382,8 +2363,7 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
         if (pct != ppct) {
           if (verbose && startTime == 0) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
             SETCAR(t, pb);
             SET_TAG(t, install("pb")); t=CDR(t);
@@ -2407,25 +2387,24 @@ qp_fast_all_ci_tests(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
     }
   }
 
-  Free(S); /* = Free(ssdMat) */
+  R_Free(S); /* = R_Free(ssdMat) */
 
   if (n_I > 0) {
     if (!work_with_margin)
-      Free(mapX2ssd);
-    Free(Y);
-    Free(I);
+      R_Free(mapX2ssd);
+    R_Free(Y);
+    R_Free(I);
   }
 
   if (work_with_margin)
-    Free(ijQ);
+    R_Free(ijQ);
 
   if (QR != R_NilValue)
-    Free(Q);
+    R_Free(Q);
 
   if (verbose && startTime == 0) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("close")); t=CDR(t);
     SETCAR(t, pb);
     eval(s, R_GlobalEnv);
@@ -2558,21 +2537,21 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
 
   if (n_I == 0) {
     if (!missing_obs(REAL(XR), n_var, n, NULL, n_var, NULL, n)) {
-      S = ssdMat = Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_var*(n_var+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, n, NULL, n_var, NULL, n, TRUE, NULL, S);
     } else
       work_with_margin = TRUE;
   } else {
-    I = Calloc(n_I, int);
+    I = R_Calloc(n_I, int);
     for (i=0; i < n_I; i++)
       I[i] = INTEGER(IR)[i]-1;
 
-    Y = Calloc(n_Y, int);
+    Y = R_Calloc(n_Y, int);
     for (i=0; i < n_Y; i++)
       Y[i] = INTEGER(YR)[i]-1;
 
     if (!missing_obs(REAL(XR), n_var, n, NULL, n_var, NULL, n)) {
-      mapX2ssd = Calloc(n_var, int);
+      mapX2ssd = R_Calloc(n_var, int);
       for (i=0; i < n_var; i++) {
         j = 0;
         while (j < n_Y && i != Y[j])
@@ -2581,7 +2560,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
         mapX2ssd[i] = j;
       }
 
-      S = ssdMat = Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
+      S = ssdMat = R_Calloc((n_Y*(n_Y+1))/2, double); /* if this doesn't do memset(0) there'll be trouble */
       ssd(REAL(XR), n_var, n, Y, n_Y, NULL, n, FALSE, NULL, ssdMat);
     } else
       work_with_margin = TRUE;
@@ -2600,9 +2579,9 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       error("q=%d > n-3=%d", q, n-3);
 
     if (work_with_margin)
-      ijQ = Calloc(q+2, int);
+      ijQ = R_Calloc(q+2, int);
 
-    Q = Calloc(q, int);
+    Q = R_Calloc(q, int);
     for (i=0; i < q; i++)
       if (work_with_margin) {
         ijQ[i+2] = INTEGER(QR)[i] - 1;
@@ -2610,15 +2589,15 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
       } else
         Q[i] = INTEGER(QR)[i] - 1;
   } else
-    ijQ = Calloc(2, int);
+    ijQ = R_Calloc(2, int);
 
   n_upper_tri = ( (q+2) * ((q+2)+1) ) / 2; /* this upper triangle includes the diagonal */
 
   if (work_with_margin)
-    S = Calloc(n_upper_tri, double);
+    S = R_Calloc(n_upper_tri, double);
 
   if (l_ini + l_jni > 0) {
-    pairup_ij_noint = Calloc(l_ini + l_jni, int);
+    pairup_ij_noint = R_Calloc(l_ini + l_jni, int);
     Memcpy(pairup_ij_noint, pairup_i_noint, (size_t) l_ini);
     Memcpy(pairup_ij_noint + l_ini, pairup_j_noint, (size_t) l_jni);
   }
@@ -2746,8 +2725,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -2767,7 +2745,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
   }
 
   if (l_ini + l_jni > 0)
-    Free(pairup_ij_noint);
+    R_Free(pairup_ij_noint);
 
   if (k <= lastAdj && k < l_int * (l_ini + l_jni) + l_ini * l_jni &&
       (startTime == 0 || k-firstAdj < nAdjEtime)) {
@@ -2831,8 +2809,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
           pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
           if (pct != ppct) {
             SEXP s, t;
-            PROTECT(t = s = allocList(3));
-            SET_TYPEOF(s, LANGSXP);
+            PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
             SETCAR(t, install("sendData")); t=CDR(t);
             SETCAR(t, masterNode);
             SET_TAG(t, install("node")); t=CDR(t);
@@ -2913,8 +2890,7 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
         pct = (int) (((k-firstAdj) * 100) / n_adj_this_proc);
         if (pct != ppct) {
           SEXP s, t;
-          PROTECT(t = s = allocList(3));
-          SET_TYPEOF(s, LANGSXP);
+          PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
           SETCAR(t, install("sendData")); t=CDR(t);
           SETCAR(t, masterNode);
           SET_TAG(t, install("node")); t=CDR(t);
@@ -2929,20 +2905,20 @@ qp_fast_all_ci_tests_par(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP QR,
     }
   }
 
-  Free(S); /* = Free(ssdMat) */
+  R_Free(S); /* = R_Free(ssdMat) */
 
   if (n_I > 0) {
     if (!work_with_margin)
-      Free(mapX2ssd);
-    Free(Y);
-    Free(I);
+      R_Free(mapX2ssd);
+    R_Free(Y);
+    R_Free(I);
   }
 
   if (work_with_margin)
-    Free(ijQ);
+    R_Free(ijQ);
 
   if (QR != R_NilValue)
-    Free(Q);
+    R_Free(Q);
 
   if (startTime > 0) {
     SEXP procTimeR;
@@ -3009,7 +2985,7 @@ qp_fast_ci_test_std(SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP QR) {
 
   snprintf(dataname, sizeof(dataname), "%s and %s given {", CHAR(STRING_ELT(getAttrib(iR, R_NamesSymbol), 0)),
            CHAR(STRING_ELT(getAttrib(jR, R_NamesSymbol), 0)));
-  Q = Calloc(q, int);
+  Q = R_Calloc(q, int);
   for (k=0;k<q;k++) {
     Q[k] = INTEGER(QR)[k]-1;
     if (k > 0)
@@ -3080,7 +3056,7 @@ qp_fast_ci_test_std(SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP QR) {
 
   UNPROTECT(10); /* S QR result result_names stat_name param_name pval_name est_name nullval_name class */
 
-  Free(Q);
+  R_Free(Q);
 
   return result;
 }
@@ -3131,7 +3107,7 @@ qp_fast_ci_test_opt(SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP QR) {
 
   snprintf(dataname, sizeof(dataname), "%s and %s given {", CHAR(STRING_ELT(getAttrib(iR, R_NamesSymbol), 0)),
           CHAR(STRING_ELT(getAttrib(jR, R_NamesSymbol), 0)));
-  Q = Calloc(q, int);
+  Q = R_Calloc(q, int);
   for (k=0;k<q;k++) {
     Q[k] = INTEGER(QR)[k]-1;
     if (k > 0)
@@ -3202,7 +3178,7 @@ qp_fast_ci_test_opt(SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP QR) {
 
   UNPROTECT(10); /* S QR result result_names stat_name param_name pval_name est_name nullval_name class */
 
-  Free(Q);
+  R_Free(Q);
 
   return result;
 }
@@ -3235,13 +3211,13 @@ qp_ci_test_std(double* S, int n_var, int n, int i, int j, int* Q, int q, double*
   double  se;
   double  t_value;
 
-  subvars     = Calloc(subn,int);
-  Mmar        = Calloc(subn*subn,double);
-  S12         = Calloc(subn,double);
-  S21         = Calloc(subn,double);
-  S22         = Calloc((subn-1)*(subn-1),double);
-  S22inv      = Calloc((subn-1)*(subn-1),double);
-  S22inv1col  = Calloc(subn-1,double);
+  subvars     = R_Calloc(subn,int);
+  Mmar        = R_Calloc(subn*subn,double);
+  S12         = R_Calloc(subn,double);
+  S21         = R_Calloc(subn,double);
+  S22         = R_Calloc((subn-1)*(subn-1),double);
+  S22inv      = R_Calloc((subn-1)*(subn-1),double);
+  S22inv1col  = R_Calloc(subn-1,double);
 
   subvars[0] = i; /* order here is important, first variable i */
   subvars[1] = j; /* then variable j then the conditioning set */
@@ -3286,10 +3262,10 @@ qp_ci_test_std(double* S, int n_var, int n, int i, int j, int* Q, int q, double*
   matprod(S12,1,subn-1,S22inv1col,subn-1,1,&betahat);
 
   /* sigma   <- sqrt((S11 - S12 %*% S22inv %*% S21) * (n - 1) / (n - q - 2)) */
-  tmpmat = Calloc(subn-1,double);
+  tmpmat = R_Calloc(subn-1,double);
   matprod(S22inv,subn-1,subn-1,S21,subn-1,1,tmpmat);
   matprod(S12,1,subn-1,tmpmat,subn-1,1,&tmpval);
-  Free(tmpmat);
+  R_Free(tmpmat);
   sigma = sqrt( (S11 - tmpval) * (n - 1) / (n - subn) );
   /* se      <- sigma * sqrt(S22inv[1,1] / (n - 1)) */
   se = sigma * sqrt(S22inv[0] / (n - 1));
@@ -3299,13 +3275,13 @@ qp_ci_test_std(double* S, int n_var, int n, int i, int j, int* Q, int q, double*
   if (beta != NULL)
     *beta = betahat;
 
-  Free(S22inv1col);
-  Free(S22inv);
-  Free(S22);
-  Free(S21);
-  Free(S12);
-  Free(Mmar);
-  Free(subvars);
+  R_Free(S22inv1col);
+  R_Free(S22inv);
+  R_Free(S22);
+  R_Free(S21);
+  R_Free(S12);
+  R_Free(Mmar);
+  R_Free(subvars);
 
   return t_value;
 }
@@ -3345,12 +3321,12 @@ qp_ci_test_opt(double* S, int n_var, int N, int i, int j, int* Q, int q,
   double  t_value;
   int     flagNoQinv=0;
 
-  subvars     = Calloc(subn,int);
-  Sij         = Calloc(4,double);
-  Sijbyq      = Calloc(2*q, double);
-  Sqbyij      = Calloc(q*2, double);
-  par_cov     = Calloc(4,double);
-  par_cor     = Calloc(4,double);
+  subvars     = R_Calloc(subn,int);
+  Sij         = R_Calloc(4,double);
+  Sijbyq      = R_Calloc(2*q, double);
+  Sqbyij      = R_Calloc(q*2, double);
+  par_cov     = R_Calloc(4,double);
+  par_cor     = R_Calloc(4,double);
 
   subvars[0] = i; /* order here is important, first variable i */
   subvars[1] = j; /* then variable j then the conditioning set */
@@ -3380,8 +3356,8 @@ qp_ci_test_opt(double* S, int n_var, int N, int i, int j, int* Q, int q,
     }
 
   if (Qinv == NULL) {
-    Qmat = Calloc(q*q, double);
-    Qinv = Calloc(q*q, double);
+    Qmat = R_Calloc(q*q, double);
+    Qinv = R_Calloc(q*q, double);
     /*
     for (i=0; i < q; i++) {
       for (j=0; j < i; j++)
@@ -3398,22 +3374,22 @@ qp_ci_test_opt(double* S, int n_var, int N, int i, int j, int* Q, int q,
       matinv(Qinv,Qmat,q, 0);
     else
       Qinv[0] = 1.0 / Qmat[0];
-    Free(Qmat);
+    R_Free(Qmat);
     flagNoQinv=1;
   }
 
-  tmpmat1 = Calloc(q*2,double);
-  tmpmat2 = Calloc(4,double);
+  tmpmat1 = R_Calloc(q*2,double);
+  tmpmat2 = R_Calloc(4,double);
   matprod(Qinv,q,q,Sqbyij,q,2,tmpmat1);
   matprod(Sijbyq,2,q,tmpmat1,q,2,tmpmat2);
-  Free(tmpmat1);
+  R_Free(tmpmat1);
   matsumf(par_cov, 2, 2, Sij, tmpmat2, -1.0);
-  Free(tmpmat2);
-  Free(Sij);
-  Free(Sijbyq);
-  Free(Sqbyij);
+  R_Free(tmpmat2);
+  R_Free(Sij);
+  R_Free(Sijbyq);
+  R_Free(Sqbyij);
   cov2cor(par_cor, par_cov, 2);
-  Free(par_cov);
+  R_Free(par_cov);
   betahat = sqrt(N - q - 2) * par_cor[2];
   se = sqrt(1.0 - par_cor[2] * par_cor[2]);
 
@@ -3423,11 +3399,11 @@ qp_ci_test_opt(double* S, int n_var, int N, int i, int j, int* Q, int q,
   /* t.value <- betahat / se */
   t_value = betahat / se;
 
-  Free(par_cor);
-  Free(subvars);
+  R_Free(par_cor);
+  R_Free(subvars);
 
   if (flagNoQinv)
-    Free(Qinv);
+    R_Free(Qinv);
 
   return t_value;
 }
@@ -3485,17 +3461,17 @@ qp_fast_ci_test_hmgm(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP ssdR,
   i = INTEGER(iR)[0] - 1;
   j = INTEGER(jR)[0] - 1;
 
-  I = Calloc(n_I, int);
+  I = R_Calloc(n_I, int);
   for (k=0; k < n_I; k++)
     I[k] = INTEGER(IR)[k]-1;
 
-  Y = Calloc(n_Y, int);
+  Y = R_Calloc(n_Y, int);
   for (k=0; k < n_Y; k++)
     Y[k] = INTEGER(YR)[k]-1;
 
   snprintf(dataname, sizeof(dataname), "%s and %s given {", CHAR(STRING_ELT(getAttrib(iR, R_NamesSymbol), 0)),
           CHAR(STRING_ELT(getAttrib(jR, R_NamesSymbol), 0)));
-  Q = Calloc(q, int);
+  Q = R_Calloc(q, int);
   for (k=0; k < q; k++) {
     Q[k] = INTEGER(QR)[k]-1;
     if (k > 0)
@@ -3505,7 +3481,7 @@ qp_fast_ci_test_hmgm(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP ssdR,
   strcat(dataname, "}");
 
   if (ssdR != R_NilValue) {
-    mapX2ssd = Calloc(p, int);
+    mapX2ssd = R_Calloc(p, int);
     for (k=0; k < p; k++)
       mapX2ssd[k] = INTEGER(mapX2ssdR)[k]-1;
     ssd = REAL(ssdR);
@@ -3592,13 +3568,13 @@ qp_fast_ci_test_hmgm(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP ssdR,
 
   UNPROTECT(8); /* result result_names stat_name param_name pval_name est_name nullval_name class */
 
-  Free(I);
-  Free(Y);
-  Free(Q);
+  R_Free(I);
+  R_Free(Y);
+  R_Free(Q);
 
   if (ssdR != R_NilValue) {
     UNPROTECT(1); /* ssdR */
-    Free(mapX2ssd);
+    R_Free(mapX2ssd);
   }
 
   return result;
@@ -3633,14 +3609,14 @@ rss(double* ssdsymmat, int n, int r) {
   if (r < 0 || r >= n)
     error("rss: n=%d r=%d\n", n, r);
 
-  S12        = Calloc(n, double);
-  S21        = Calloc(n, double);
-  S22        = Calloc((n-1)*(n-1), double);
-  S22inv     = Calloc((n-1)*(n-1), double);
+  S12        = R_Calloc(n, double);
+  S21        = R_Calloc(n, double);
+  S22        = R_Calloc((n-1)*(n-1), double);
+  S22inv     = R_Calloc((n-1)*(n-1), double);
 
   /* assuming input ssd comes only as the upper triangle (including diagonal)
      so we have to blow up the memory footprint to have the squared one */
-  ssd = Calloc(n*n, double);
+  ssd = R_Calloc(n*n, double);
   for (i=0; i < n; i++)
     for (j=0; j <= i; j++)
       ssd[i + j*n] = ssd[j + i*n] = ssdsymmat[UTE2I(i, j)];
@@ -3678,18 +3654,18 @@ rss(double* ssdsymmat, int n, int r) {
   matinv(S22inv, S22, n-1, 0);
   
   /* rss <- S11 - S12 %*% S22inv %*% S21 */
-  tmpmat = Calloc(n-1, double);
+  tmpmat = R_Calloc(n-1, double);
   matprod(S22inv, n-1, n-1, S21, n-1, 1, tmpmat);
   matprod(S12, 1, n-1, tmpmat, n-1, 1, &tmpval);
-  Free(tmpmat);
+  R_Free(tmpmat);
 
   rss = S11 - tmpval;
 
-  Free(ssd);
-  Free(S22inv);
-  Free(S22);
-  Free(S21);
-  Free(S12);
+  R_Free(ssd);
+  R_Free(S22inv);
+  R_Free(S22);
+  R_Free(S21);
+  R_Free(S12);
 
   return(rss);
 }
@@ -3715,11 +3691,11 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
   *n_co = n;
 
   /* in order to save memory we will use ssd_mat for calculating each ssd matrix */
-  /* the call below to ssd_A() assumes that this Calloc() memsets ssd_mat to zeroes */
-  ssd_mat = Calloc((n_Y * (n_Y + 1)) / 2, double);  /* upper triangle includes the diagonal */
+  /* the call below to ssd_A() assumes that this R_Calloc() memsets ssd_mat to zeroes */
+  ssd_mat = R_Calloc((n_Y * (n_Y + 1)) / 2, double);  /* upper triangle includes the diagonal */
 
   if (n_I > 0 || ucond_ssd == NULL) {
-    idx_misobs = Calloc(n, int); /* assume Calloc() memsets everything to zeroes */
+    idx_misobs = R_Calloc(n, int); /* assume R_Calloc() memsets everything to zeroes */
 
     /* when calculating the larger ssd, the number of complete observations and the
      * logical mask of missing observations is pulled out and employed in later calls
@@ -3728,13 +3704,13 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
   } else {
     int* tmp;
 
-    tmp = Calloc(n_Y, int);
+    tmp = R_Calloc(n_Y, int);
     for (k=0; k < n_Y; k++)
       tmp[k] = mapX2ucond_ssd[Y[k]];
 
     symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y);
 
-    Free(tmp);
+    R_Free(tmp);
   }
 
   /* rss0 <- var(X[, Y[1]])*(n_co-1) */
@@ -3813,13 +3789,13 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
   } else {
     int* tmp;
 
-    tmp = Calloc(n_Y_i, int);
+    tmp = R_Calloc(n_Y_i, int);
     for (k=0; k < n_Y_i; k++)
       tmp[k] = mapX2ucond_ssd[Y[k]];
 
     symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_i);
 
-    Free(tmp);
+    R_Free(tmp);
   }
 
 /*
@@ -3873,13 +3849,13 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
     } else {
       int* tmp;
 
-      tmp = Calloc(n_Y_j, int);
+      tmp = R_Calloc(n_Y_j, int);
       for (k=0; k < n_Y_j; k++)
         tmp[k] = mapX2ucond_ssd[Y[k]];
 
       symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_j);
 
-      Free(tmp);
+      R_Free(tmp);
     }
 
 /*
@@ -3933,13 +3909,13 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
       } else {
         int* tmp;
 
-        tmp = Calloc(n_Y_ij, int);
+        tmp = R_Calloc(n_Y_ij, int);
         for (k=0; k < n_Y_ij; k++)
           tmp[k] = mapX2ucond_ssd[Y[k]];
 
         symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_ij);
 
-        Free(tmp);
+        R_Free(tmp);
       }
 
 /*
@@ -3969,10 +3945,10 @@ lr_complete_obs(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y,
 
   }
 
-  Free(ssd_mat);
+  R_Free(ssd_mat);
 
   if (idx_misobs != NULL)
-    Free(idx_misobs);
+    R_Free(idx_misobs);
 
   if (flag_zero || final_sign == -1) {
     lr = R_NaN;
@@ -3995,13 +3971,13 @@ new_com_stats(int n_joint_levels, int n_Y) {
   com_stats_t cs = { NULL, NULL, NULL};
 
   if (n_joint_levels > 0 && n_Y > 0)
-    cs.Es_com = Calloc(n_joint_levels * n_Y, double);
+    cs.Es_com = R_Calloc(n_joint_levels * n_Y, double);
 
   if (n_Y > 0)
-    cs.Ess_com = Calloc(n_Y * n_Y, double);
+    cs.Ess_com = R_Calloc(n_Y * n_Y, double);
 
   if (n_joint_levels > 0)
-    cs.n_com = Calloc(n_joint_levels, int); /* assuming this memsets to zeroes */
+    cs.n_com = R_Calloc(n_joint_levels, int); /* assuming this memsets to zeroes */
 
   return cs;
 }
@@ -4009,13 +3985,13 @@ new_com_stats(int n_joint_levels, int n_Y) {
 void
 free_com_stats(com_stats_t cs) {
   if (cs.Es_com != NULL)
-    Free(cs.Es_com);
+    R_Free(cs.Es_com);
 
   if (cs.Ess_com != NULL)
-    Free(cs.Ess_com);
+    R_Free(cs.Ess_com);
 
   if (cs.n_com != NULL)
-    Free(cs.n_com);
+    R_Free(cs.n_com);
 }
 
 com_stats_t
@@ -4030,8 +4006,8 @@ stat_com(double* X, int p, int n, int* missing_mask, int n_mis, int* Is, int n_I
   if (n-n_mis > 0 && n_Y > 0) {
     int* obs_idx;
 
-    obs_idx = Calloc(n, int);
-    global_xtab = Calloc(n, int);
+    obs_idx = R_Calloc(n, int);
+    global_xtab = R_Calloc(n, int);
     for (i=0; i < n; i++) {
       global_xtab[i] = 1;
       if (missing_mask[i])
@@ -4070,8 +4046,8 @@ stat_com(double* X, int p, int n, int* missing_mask, int n_mis, int* Is, int n_I
       i = j;
     }
 
-    Free(global_xtab);
-    Free(obs_idx);
+    R_Free(global_xtab);
+    R_Free(obs_idx);
   }
 
   return cs;
@@ -4087,17 +4063,17 @@ new_suf_stats(int n_joint_levels, int n_Y) {
   suf_stats_t ss = { NULL, NULL, NULL, NULL};
 
   if (n_joint_levels > 0 && n_Y > 0) {
-    ss.h = Calloc(n_joint_levels * n_Y, double);
-    ss.bar_y = Calloc(n_joint_levels * n_Y, double);
+    ss.h = R_Calloc(n_joint_levels * n_Y, double);
+    ss.bar_y = R_Calloc(n_joint_levels * n_Y, double);
   }
 
   if (n_Y > 0) {
-    ss.ssd = Calloc(n_Y * n_Y, double);
-    ss.K = Calloc(n_Y * n_Y, double);
+    ss.ssd = R_Calloc(n_Y * n_Y, double);
+    ss.K = R_Calloc(n_Y * n_Y, double);
   }
 
   if (n_joint_levels > 0)
-    ss.m = Calloc(n_joint_levels, double);
+    ss.m = R_Calloc(n_joint_levels, double);
 
   return ss;
 }
@@ -4105,19 +4081,19 @@ new_suf_stats(int n_joint_levels, int n_Y) {
 void
 free_suf_stats(suf_stats_t ss) {
   if (ss.h != NULL)
-    Free(ss.h);
+    R_Free(ss.h);
 
   if (ss.bar_y != NULL)
-    Free(ss.bar_y);
+    R_Free(ss.bar_y);
 
   if (ss.ssd != NULL)
-    Free(ss.ssd);
+    R_Free(ss.ssd);
 
   if (ss.K != NULL)
-    Free(ss.K);
+    R_Free(ss.K);
 
   if (ss.m != NULL)
-    Free(ss.m);
+    R_Free(ss.m);
 }
 
 /* k(i) = y^T\Sigma^{-1}\mu(i) - 1/2 * [y^T\Sigma^{-1} y + \mu(i)^T \Sigma^{-1}\mu(i)] + log p(i) */
@@ -4136,13 +4112,13 @@ Ki(double* X, int p, int n, int i, int* Y, int n_Y, int j, double* Sigma, double
 
   aux = pr[j];
   if (n_Y > 0) {
-    xYs = Calloc(n_Y, double);
-    t_xYs = Calloc(n_Y, double);
-    sigmaYs = Calloc(n_Y*n_Y, double);
-    inv_sigmaYs = Calloc(n_Y*n_Y, double);
-    muYs = Calloc(n_Y, double);
-    t_muYs = Calloc(n_Y, double);
-    tmp = Calloc(n_Y*n_Y, double);
+    xYs = R_Calloc(n_Y, double);
+    t_xYs = R_Calloc(n_Y, double);
+    sigmaYs = R_Calloc(n_Y*n_Y, double);
+    inv_sigmaYs = R_Calloc(n_Y*n_Y, double);
+    muYs = R_Calloc(n_Y, double);
+    t_muYs = R_Calloc(n_Y, double);
+    tmp = R_Calloc(n_Y*n_Y, double);
 
     for (k=0; k < n_Y; k++)
       xYs[k] = X[n * Y[k] + i];
@@ -4165,13 +4141,13 @@ Ki(double* X, int p, int n, int i, int* Y, int n_Y, int j, double* Sigma, double
 
     aux = exp(t1 - 0.5 * (t2 + t3) + log(pr[j]));
 
-    Free(tmp);
-    Free(t_muYs);
-    Free(muYs);
-    Free(inv_sigmaYs);
-    Free(sigmaYs);
-    Free(t_xYs);
-    Free(xYs);
+    R_Free(tmp);
+    R_Free(t_muYs);
+    R_Free(muYs);
+    R_Free(inv_sigmaYs);
+    R_Free(sigmaYs);
+    R_Free(t_xYs);
+    R_Free(xYs);
 
   }
 
@@ -4193,8 +4169,8 @@ prob_i(double* X, int p, int n, int * missing_mask, int n_mis, int* I, int n_I,
   double  K_den;
   double* pr_i;
 
-  pr_i = Calloc(n_mis, double); /* must be freed outside */
-  idx_I_obs = Calloc(n_I, int);
+  pr_i = R_Calloc(n_mis, double); /* must be freed outside */
+  idx_I_obs = R_Calloc(n_I, int);
 
   for (i=0; i < n; i++) {
     if (missing_mask[i]) {
@@ -4216,7 +4192,7 @@ prob_i(double* X, int p, int n, int * missing_mask, int n_mis, int* I, int n_I,
         pr_i[i] = 0.0;
       } else {
         n_index_S = 0;
-        index_S = Calloc(n_joint_levels, int);
+        index_S = R_Calloc(n_joint_levels, int);
         if (n_idx_I_obs == 0) {
           for (j=0; j < n_joint_levels; j++)
             index_S[j] = j;
@@ -4229,7 +4205,7 @@ prob_i(double* X, int p, int n, int * missing_mask, int n_mis, int* I, int n_I,
           error("implementation not finished yet\n");
         }
         n_index_Si = 0;
-        index_Si = Calloc(n_joint_levels, int);
+        index_Si = R_Calloc(n_joint_levels, int);
         for (j=0; j < n_index_S; j++)
           if (index_S[j] == joint_level_k)
             index_Si[n_index_Si++] = index_S[j];
@@ -4246,13 +4222,13 @@ prob_i(double* X, int p, int n, int * missing_mask, int n_mis, int* I, int n_I,
               pr_i[i] = pr_i[i] + Ki(X, p, n, i, Y, n_Y, index_Si[j], Sigma, mu, n_joint_levels, pr) / K_den;
           }
         }
-        Free(index_S);
-        Free(index_Si);
+        R_Free(index_S);
+        R_Free(index_Si);
       }
     }
   }
 
-  Free(idx_I_obs);
+  R_Free(idx_I_obs);
 
   return pr_i;
 }
@@ -4268,10 +4244,10 @@ stat_mis(double* X, int p, int n, int* missing_mask, int n_mis, int* I, int n_I,
   double*     bar_y;
   double*     K;
 
-  m = Calloc(n_joint_levels, double);
-  h = Calloc(n_joint_levels*n_Y, double);
-  bar_y = Calloc(n_joint_levels*n_Y, double);
-  K = Calloc((n_Y+(n_Y+1))/2, double);
+  m = R_Calloc(n_joint_levels, double);
+  h = R_Calloc(n_joint_levels*n_Y, double);
+  bar_y = R_Calloc(n_joint_levels*n_Y, double);
+  K = R_Calloc((n_Y+(n_Y+1))/2, double);
 
   ss = new_suf_stats(n_joint_levels, n_Y);
 
@@ -4281,10 +4257,10 @@ stat_mis(double* X, int p, int n, int* missing_mask, int n_mis, int* I, int n_I,
   if (n_Is > 0) {
   }
 
-  Free(K);
-  Free(bar_y);
-  Free(h);
-  Free(m);
+  R_Free(K);
+  R_Free(bar_y);
+  R_Free(h);
+  R_Free(m);
 
   return ss;
 }
@@ -4318,7 +4294,7 @@ lr_em(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
     error("EM not implemented yet for missing continuous values\n");
 
   comStats_i = comStats_j = comStats_ij = (com_stats_t) {NULL, NULL, NULL};
-  missing_mask = Calloc(n, int);
+  missing_mask = R_Calloc(n, int);
   n_mis = find_missing_obs(X, p, n, I, n_I, NULL, n, missing_mask);
 
   l = -1;
@@ -4347,19 +4323,19 @@ lr_em(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
     n_I_i--; /* we'll re-use n_I with n_I_i */
   }
 
-  pr0 = Calloc(n_joint_levels, double); /* WATCH OUT, this grows exponentially in the # of discrete vars */
-  pr = Calloc(n_joint_levels, double); /* WATCH OUT, this grows exponentially in the # of discrete vars */
+  pr0 = R_Calloc(n_joint_levels, double); /* WATCH OUT, this grows exponentially in the # of discrete vars */
+  pr = R_Calloc(n_joint_levels, double); /* WATCH OUT, this grows exponentially in the # of discrete vars */
   for (k=0; k < n_joint_levels; k++) /* pr0 initialized to the uniform distribution */
     pr[k] = pr0[k] = 1.0 / n_joint_levels;
 
   /* mu0 initialized to zeroes, assuming that memset initializes content to zeroes */
-  mu0 = Calloc(n_Y * n_joint_levels, double);
-  mu = Calloc(n_Y * n_joint_levels, double);
-  Sigma0 = Calloc(n_upper_tri, double); /* storing the upper triangle, incl. diagonal, only */
-  Sigma = Calloc(n_upper_tri, double); /* storing the upper triangle, incl. diagonal, only */
+  mu0 = R_Calloc(n_Y * n_joint_levels, double);
+  mu = R_Calloc(n_Y * n_joint_levels, double);
+  Sigma0 = R_Calloc(n_upper_tri, double); /* storing the upper triangle, incl. diagonal, only */
+  Sigma = R_Calloc(n_upper_tri, double); /* storing the upper triangle, incl. diagonal, only */
 
   /* Y_i <- intersect(Y, c(j, Q)) */
-  Y_i = Calloc(n_Y, int);
+  Y_i = R_Calloc(n_Y, int);
   n_Y_i = 0;
   l = -1;
   /* Sigma0 initialized to the diagonal matrix, simultaneously, we initialize Y_i and find j in Y */
@@ -4381,8 +4357,8 @@ lr_em(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
     Y[l] = tmp;
   }
 
-  I_ij = Calloc(q, int);
-  Y_ij = Calloc(q, int);
+  I_ij = R_Calloc(q, int);
+  Y_ij = R_Calloc(q, int);
   /* I_ij <- intersect(I, Q)
    * Y_ij <- intersect(Y, Q) */
   n_I_ij = n_Y_ij = 0;
@@ -4491,16 +4467,16 @@ lr_em(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
   free_com_stats(comStats_i);
   free_com_stats(comStats_j);
   free_com_stats(comStats_ij);
-  Free(Y_ij);
-  Free(I_ij);
-  Free(Y_i);
-  Free(Sigma);
-  Free(Sigma0);
-  Free(mu);
-  Free(mu0);
-  Free(pr);
-  Free(pr0);
-  Free(missing_mask);
+  R_Free(Y_ij);
+  R_Free(I_ij);
+  R_Free(Y_i);
+  R_Free(Sigma);
+  R_Free(Sigma0);
+  R_Free(mu);
+  R_Free(mu0);
+  R_Free(pr);
+  R_Free(pr0);
+  R_Free(missing_mask);
 
   return R_NaN;
 }
@@ -4691,9 +4667,9 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
   /* assume if any of (i, j) is discrete is always i */
 
   /* I <- intersect(I, c(i, Q)) */
-  I_int = Calloc(q+1, int);
-  /* n_levels_int = Calloc(q+1, int); */
-  n_levels_int = Calloc(p+q+1, int);
+  I_int = R_Calloc(q+1, int);
+  /* n_levels_int = R_Calloc(q+1, int); */
+  n_levels_int = R_Calloc(p+q+1, int);
 
   k = 0;
   if (i < p)
@@ -4839,11 +4815,11 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
   total_n_Y = n_Y;
   n_Y = n_Y_int;
 
-  /* the call below to ssd_A() assumes that this Calloc() memsets ssd_mat to zeroes */
-  ssd_mat = Calloc((n_Y * (n_Y + 1)) / 2, double);  /* upper triangle includes the diagonal */
+  /* the call below to ssd_A() assumes that this R_Calloc() memsets ssd_mat to zeroes */
+  ssd_mat = R_Calloc((n_Y * (n_Y + 1)) / 2, double);  /* upper triangle includes the diagonal */
 
   if (n_I_int > 0 || ucond_ssd == NULL) {
-    idx_misobs = Calloc(n, int);
+    idx_misobs = R_Calloc(n, int);
 
     /* when calculating the larger ssd, the number of complete observations and the
      * logical mask of missing observations is pulled out and employed in later calls
@@ -4852,13 +4828,13 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
   } else {
     int* tmp;
 
-    tmp = Calloc(n_Y, int);
+    tmp = R_Calloc(n_Y, int);
     for (k=0; k < n_Y; k++)
       tmp[k] = mapX2ucond_ssd[Y[k]];
 
     symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y);
 
-    Free(tmp);
+    R_Free(tmp);
   }
 /*
   Rprintf("ssd:\n");
@@ -4912,13 +4888,13 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
   } else {
     int* tmp;
 
-    tmp = Calloc(n_Y_i, int);
+    tmp = R_Calloc(n_Y_i, int);
     for (k=0; k < n_Y_i; k++)
       tmp[k] = mapX2ucond_ssd[Y[k]];
 
     symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_i);
 
-    Free(tmp);
+    R_Free(tmp);
   }
 
 /*
@@ -4961,13 +4937,13 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
     } else {
       int* tmp;
 
-      tmp = Calloc(n_Y_j, int);
+      tmp = R_Calloc(n_Y_j, int);
       for (k=0; k < n_Y_j; k++)
         tmp[k] = mapX2ucond_ssd[Y[k]];
 
       symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_j);
 
-      Free(tmp);
+      R_Free(tmp);
     }
 
 /*
@@ -5011,13 +4987,13 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
       } else {
         int* tmp;
 
-        tmp = Calloc(n_Y_ij, int);
+        tmp = R_Calloc(n_Y_ij, int);
         for (k=0; k < n_Y_ij; k++)
           tmp[k] = mapX2ucond_ssd[Y[k]];
 
         symmatsubm(ssd_mat, ucond_ssd, total_n_Y, tmp, n_Y_ij);
 
-        Free(tmp);
+        R_Free(tmp);
       }
 
 /*
@@ -5046,12 +5022,12 @@ qp_ci_test_hmgm_sml(SEXP Xsml, int* cumsum_sByChr, int s, int gLevels, double* X
 
   }
 
-  Free(ssd_mat);
-  Free(n_levels_int);
-  Free(I_int);
+  R_Free(ssd_mat);
+  R_Free(n_levels_int);
+  R_Free(I_int);
 
   if (idx_misobs != NULL)
-    Free(idx_misobs);
+    R_Free(idx_misobs);
 
   if (flag_zero || final_sign == -1)
     lr = R_NaN;
@@ -5093,9 +5069,9 @@ qp_edge_nrr(double* X, double* S, int p, int n, int i, int j, int q, int* restri
 
   n_upper_tri = ( (q+2) * ((q+2)+1) ) / 2; /* this upper triangle includes the diagonal */
   if (S == NULL) {
-    S = Calloc(n_upper_tri, double);
-    ijQ = Calloc(q+2, int);
-    Q = Calloc(q, int);
+    S = R_Calloc(n_upper_tri, double);
+    ijQ = R_Calloc(q+2, int);
+    Q = R_Calloc(q, int);
     ijQ[0] = i;
     ijQ[1] = j;
     for (k=0; k < q; k++)
@@ -5103,7 +5079,7 @@ qp_edge_nrr(double* X, double* S, int p, int n, int i, int j, int q, int* restri
     work_with_margin = TRUE;
   }
 
-  q_by_T_samples = Calloc(q * nTests, int);
+  q_by_T_samples = R_Calloc(q * nTests, int);
 
   if (n_rQ == 0)
     sampleQs(nTests, q, i, j, p, NULL, fixQ, n_fQ, q_by_T_samples);
@@ -5145,12 +5121,12 @@ qp_edge_nrr(double* X, double* S, int p, int n, int i, int j, int q, int* restri
     }
   }
 
-  Free(q_by_T_samples);
+  R_Free(q_by_T_samples);
 
   if (work_with_margin) {
-    Free(S);
-    Free(ijQ);
-    Free(Q);
+    R_Free(S);
+    R_Free(ijQ);
+    R_Free(Q);
   }
 
   return (double) ( ((double) nAcceptedTests) / ((double) nTests) );
@@ -5228,7 +5204,7 @@ qp_edge_nrr_hmgm(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y
   int    nActualTests = 0;
   int*   problematicQ = NULL;
 
-  q_by_T_samples = Calloc(q * nTests, int);
+  q_by_T_samples = R_Calloc(q * nTests, int);
 
   if (n_rQ == 0)
     sampleQs(nTests, q, i, j, p, NULL, fixQ, n_fQ, q_by_T_samples);
@@ -5310,7 +5286,7 @@ qp_edge_nrr_hmgm(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y
     /* warning(buf); */
   }
 
-  Free(q_by_T_samples);
+  R_Free(q_by_T_samples);
 
   return (double) ( ((double) nAcceptedTests) / ((double) nActualTests) );
 }
@@ -5342,7 +5318,7 @@ qp_edge_nrr_hmgm_sml(SEXP X, int* cumsum_sByChr, int s, int gLevels, double* XEP
   int    nActualTests = 0;
   int*   problematicQ = NULL;
 
-  q_by_T_samples = Calloc(q * nTests, int);
+  q_by_T_samples = R_Calloc(q * nTests, int);
 
   if (n_rQ == 0)
     sampleQs(nTests, q, i, j, p+s, NULL, fixQ, n_fQ, q_by_T_samples);
@@ -5428,7 +5404,7 @@ qp_edge_nrr_hmgm_sml(SEXP X, int* cumsum_sByChr, int s, int gLevels, double* XEP
     /* warning(buf); */
   }
 
-  Free(q_by_T_samples);
+  R_Free(q_by_T_samples);
 
   return (double) ( ((double) nAcceptedTests) / ((double) nActualTests) );
 }
@@ -5501,13 +5477,13 @@ qp_fast_edge_nrr(SEXP XR, SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP qR,
       error("q=%d > n-3=%d", q, n-3);
 
   if (n_rQ > 0) {
-    restrictQ = Calloc(n_rQ, int);
+    restrictQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       restrictQ[k] = INTEGER(restrictQR)[k]-1;
   }
 
   if (n_fQ > 0) {
-    fixQ = Calloc(n_rQ, int);
+    fixQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       fixQ[k] = INTEGER(fixQR)[k]-1;
   }
@@ -5523,10 +5499,10 @@ qp_fast_edge_nrr(SEXP XR, SEXP SR, SEXP pR, SEXP nR, SEXP iR, SEXP jR, SEXP qR,
                              fixQ, n_fQ, nTests, alpha, pcor);
 
   if (n_rQ > 0)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (n_fQ > 0)
-    Free(fixQ);
+    R_Free(fixQ);
 
   if (INTEGER(returnPcorR)[0])
     UNPROTECT(1); /* pcor */
@@ -5607,28 +5583,28 @@ qp_fast_edge_nrr_hmgm(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP ssdR,
   if (q > n-3)
     error("q=%d > n-3=%d",q,n-3);
 
-  I = Calloc(n_I, int);
+  I = R_Calloc(n_I, int);
   for (k=0; k < n_I; k++)
     I[k] = INTEGER(IR)[k]-1;
 
-  Y = Calloc(n_Y, int);
+  Y = R_Calloc(n_Y, int);
   for (k=0; k < n_Y; k++)
     Y[k] = INTEGER(YR)[k]-1;
 
   if (ssdR != R_NilValue) {
-    mapX2ssd = Calloc(p, int);
+    mapX2ssd = R_Calloc(p, int);
     for (k=0; k < p; k++)
       mapX2ssd[k] = INTEGER(mapX2ssdR)[k]-1;
   }
 
   if (n_rQ > 0) {
-    restrictQ = Calloc(n_rQ, int);
+    restrictQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       restrictQ[k] = INTEGER(restrictQR)[k]-1;
   }
 
   if (n_fQ > 0) {
-    fixQ = Calloc(n_rQ, int);
+    fixQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       fixQ[k] = INTEGER(fixQR)[k]-1;
   }
@@ -5643,17 +5619,17 @@ qp_fast_edge_nrr_hmgm(SEXP XR, SEXP IR, SEXP n_levelsR, SEXP YR, SEXP ssdR,
 
   if (ssdR != R_NilValue) {
     UNPROTECT(1); /* ssdR */
-    Free(mapX2ssd);
+    R_Free(mapX2ssd);
   }
 
   if (n_rQ > 0)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (n_fQ > 0)
-    Free(fixQ);
+    R_Free(fixQ);
 
-  Free(I);
-  Free(Y);
+  R_Free(I);
+  R_Free(Y);
 
   return nrr;
 }
@@ -5727,33 +5703,33 @@ qp_fast_edge_nrr_hmgm_sml(SEXP XR, SEXP cumsum_sByChrR, SEXP sR, SEXP gLevelsR,
   if (q > n-3)
     error("q=%d > n-3=%d", q, n-3);
 
-  I = Calloc(n_I, int);
+  I = R_Calloc(n_I, int);
   for (k=0; k < n_I; k++)
     I[k] = INTEGER(IR)[k]-1;
 
-  Y = Calloc(n_Y, int);
+  Y = R_Calloc(n_Y, int);
   for (k=0; k < n_Y; k++)
     Y[k] = INTEGER(YR)[k]-1;
 
   if (ssdR != R_NilValue) {
-    mapX2ssd = Calloc(p, int);
+    mapX2ssd = R_Calloc(p, int);
     for (k=0; k < p; k++)
       mapX2ssd[k] = INTEGER(mapX2ssdR)[k]-1;
   }
 
   if (n_rQ > 0) {
-    restrictQ = Calloc(n_rQ, int);
+    restrictQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       restrictQ[k] = INTEGER(restrictQR)[k]-1;
   }
 
   if (n_fQ > 0) {
-    fixQ = Calloc(n_rQ, int);
+    fixQ = R_Calloc(n_rQ, int);
     for (k=0; k < n_rQ; k++)
       fixQ[k] = INTEGER(fixQR)[k]-1;
   }
 
-  XEP1q = Calloc((p+q+1)*n, double); /* allocate extra space for all genotypes that may enter */
+  XEP1q = R_Calloc((p+q+1)*n, double); /* allocate extra space for all genotypes that may enter */
   Memcpy(XEP1q, REAL(XEPR), (size_t) (p * n));
 
   PROTECT(nrr = allocVector(REALSXP,1));
@@ -5767,19 +5743,19 @@ qp_fast_edge_nrr_hmgm_sml(SEXP XR, SEXP cumsum_sByChrR, SEXP sR, SEXP gLevelsR,
 
   if (ssdR != R_NilValue) {
     UNPROTECT(1); /* ssdR */
-    Free(mapX2ssd);
+    R_Free(mapX2ssd);
   }
 
   if (n_rQ > 0)
-    Free(restrictQ);
+    R_Free(restrictQ);
 
   if (n_fQ > 0)
-    Free(fixQ);
+    R_Free(fixQ);
 
-  Free(XEP1q);
-  Free(I);
-  Free(Y);
-  Free(mapX2ssd);
+  R_Free(XEP1q);
+  R_Free(I);
+  R_Free(Y);
+  R_Free(mapX2ssd);
 
   return nrr;
 }
@@ -5829,25 +5805,25 @@ qp_fast_path_weight(SEXP pathR, SEXP SR, SEXP QR, SEXP RR, SEXP map2RR, SEXP edg
   p = INTEGER(getAttrib(SR, R_DimSymbol))[0];
   nedg = INTEGER(getAttrib(edgesR, R_DimSymbol))[0];
 
-  path = Calloc(pathlen, int);
+  path = R_Calloc(pathlen, int);
   for (k=0;k<pathlen;k++)
     path[k] = INTEGER(pathR)[k]-1;
 
-  Q = Calloc(q, int);
+  Q = R_Calloc(q, int);
   for (k=0;k<q;k++)
     Q[k] = INTEGER(QR)[k]-1;
 
-  R = Calloc(q, int);
+  R = R_Calloc(q, int);
   for (k=0;k<r;k++)
     R[k] = INTEGER(RR)[k]-1;
 
-  Srr = Calloc((r * (r + 1)) / 2, double); /* upper triangle includes the diagonal */
+  Srr = R_Calloc((r * (r + 1)) / 2, double); /* upper triangle includes the diagonal */
   symmatsubm(Srr, REAL(SR), p, R, r);
 
-  K = Calloc((r*(r+1))/2, double);
+  K = R_Calloc((r*(r+1))/2, double);
   symmatinv(K, Srr, r); /* shouild the result be an upper triangle too ? */
 
-  Spathpath = Calloc((pathlen * (pathlen + 1)) / 2, double);
+  Spathpath = R_Calloc((pathlen * (pathlen + 1)) / 2, double);
   symmatsubm(Spathpath, REAL(SR), p, path, pathlen);
   Spathpathdet = exp(symmatlogdet(Spathpath, pathlen, &detsgn));
 
@@ -5867,24 +5843,24 @@ qp_fast_path_weight(SEXP pathR, SEXP SR, SEXP QR, SEXP RR, SEXP map2RR, SEXP edg
     double* Kfl;
     double* pcov;
 
-    Kfl = Calloc(4, double);
+    Kfl = R_Calloc(4, double);
     Kfl[0] = K[UTE2I(fstvtx, fstvtx)];
     Kfl[1] = Kfl[2] = K[UTE2I(fstvtx, lstvtx)];
     Kfl[3] = K[UTE2I(lstvtx, lstvtx)];
-    pcov = Calloc(4, double);
+    pcov = R_Calloc(4, double);
     matinv(pcov, Kfl, 2, 0);
     pw = pw / sqrt(pcov[0]*pcov[2]);
 
-    Free(pcov);
-    Free(Kfl);
+    R_Free(pcov);
+    R_Free(Kfl);
   }
 
-  Free(Spathpath);
-  Free(K);
-  Free(Srr);
-  Free(Q);
-  Free(R);
-  Free(path);
+  R_Free(Spathpath);
+  R_Free(K);
+  R_Free(Srr);
+  R_Free(Q);
+  R_Free(R);
+  R_Free(path);
 
   UNPROTECT(4); /* S Q R sgn */
 
@@ -5940,8 +5916,8 @@ sampleQs(int T, int q, int v_i, int v_j, int p, int* restrictQ, int* fixQ,
     v_i = v_j = -1;
   }
 
-  x = Calloc(p,int);
-  z = Calloc(p,int);
+  x = R_Calloc(p,int);
+  z = R_Calloc(p,int);
 
   for (i = 0; i < p; i++) {             /* x is a working-only vector */
     x[i] = i;
@@ -5992,8 +5968,8 @@ sampleQs(int T, int q, int v_i, int v_j, int p, int* restrictQ, int* fixQ,
 
   }
 
-  Free(x);
-  Free(z);
+  R_Free(x);
+  R_Free(z);
 }
 
 
@@ -6038,13 +6014,13 @@ qp_clique_number_lb(SEXP A, SEXP return_vertices, SEXP approx_iter, SEXP verbose
 
   REPROTECT(A = coerceVector(A,INTSXP),Api);
 
-  deg = Calloc(n, IntWithIdx);
-  pdeg = Calloc(n, int);
-  ivec = Calloc(n, int);
-  sset = Calloc(n, int);
-  ssetelem = Calloc(n, int);
-  cliqueVertices = Calloc(n, int);
-  clq = Calloc(n, int);
+  deg = R_Calloc(n, IntWithIdx);
+  pdeg = R_Calloc(n, int);
+  ivec = R_Calloc(n, int);
+  sset = R_Calloc(n, int);
+  ssetelem = R_Calloc(n, int);
+  cliqueVertices = R_Calloc(n, int);
+  clq = R_Calloc(n, int);
 
   for (i=0; i < n; i++) {
     int j;
@@ -6190,13 +6166,13 @@ qp_clique_number_lb(SEXP A, SEXP return_vertices, SEXP approx_iter, SEXP verbose
 
     INTEGER(return_value)[0] = cliqueNumber;
   }
-  Free(deg);
-  Free(pdeg);
-  Free(ivec);
-  Free(sset);
-  Free(ssetelem);
-  Free(cliqueVertices);
-  Free(clq);
+  R_Free(deg);
+  R_Free(pdeg);
+  R_Free(ivec);
+  R_Free(sset);
+  R_Free(ssetelem);
+  R_Free(cliqueVertices);
+  R_Free(clq);
 
   UNPROTECT(1);  /* return_value */
 
@@ -6308,7 +6284,7 @@ cliquer_cb_add_clique_to_list(set_t clique, graph_t* g, clique_options* opts) {
   clique_t*     c;
 
   cset = (clique_set_t *) opts->user_data;
-  c = Calloc(1,clique_t);
+  c = R_Calloc(1,clique_t);
   c->next = NULL;
                                                                                                 
   if (cset->n == 0)
@@ -6340,7 +6316,7 @@ void
 add_clique_vts(clique_set_t* cset, set_t clique) {
   clique_t* c;
 
-  c = Calloc(1,clique_t);
+  c = R_Calloc(1,clique_t);
   c->next = NULL;
 
   if (cset->n == 0)
@@ -6370,7 +6346,7 @@ void
 add_clique_vta(clique_set_t* cset, int* clique, int n) {
   clique_t* c;
 
-  c = Calloc(1,clique_t);
+  c = R_Calloc(1,clique_t);
   c->next = NULL;
 
   if (cset->n == 0)
@@ -6383,7 +6359,7 @@ add_clique_vta(clique_set_t* cset, int* clique, int n) {
   }
 
   c->n     = n;
-  c->u.vta = Calloc(n,int);
+  c->u.vta = R_Calloc(n,int);
   Memcpy(c->u.vta,clique,(size_t) n);
 
   cset->n++;
@@ -6413,7 +6389,7 @@ destroy_cliques_vts(clique_set_t* cset) {
                                                                                                 
     tmp = p->next;
     set_free(p->u.vts);
-    Free(p);
+    R_Free(p);
     p = tmp;
   }
 
@@ -6444,8 +6420,8 @@ destroy_cliques_vta(clique_set_t* cset) {
     clique_t* tmp;
                                                                                                 
     tmp = p->next;
-    Free(p->u.vta);
-    Free(p);
+    R_Free(p->u.vta);
+    R_Free(p);
     p = tmp;
   }
 
@@ -6561,9 +6537,9 @@ qp_fast_cliquer_get_cliques(SEXP I, SEXP clqspervtx, SEXP verbose) {
     if (INTEGER(clqspervtx)[0]) {
       int i;
 
-      idxclqs = (int **) Calloc(n,int *);
-      nidxclqs = (int *) Calloc(n,int);
-      sidxclqs = (int *) Calloc(n,int);
+      idxclqs = (int **) R_Calloc(n,int *);
+      nidxclqs = (int *) R_Calloc(n,int);
+      sidxclqs = (int *) R_Calloc(n,int);
 
       for (i=0;i<n;i++)
         nidxclqs[i]=0;
@@ -6585,7 +6561,7 @@ qp_fast_cliquer_get_cliques(SEXP I, SEXP clqspervtx, SEXP verbose) {
         if (INTEGER(clqspervtx)[0]) {
           if (nidxclqs[v] == 0) {
             sidxclqs[v] = 1;
-            idxclqs[v] = (int *) Calloc(sidxclqs[v],int);
+            idxclqs[v] = (int *) R_Calloc(sidxclqs[v],int);
             idxclqs[v][nidxclqs[v]] = iclq + 1;
             nidxclqs[v]++;
           } else {
@@ -6594,7 +6570,7 @@ qp_fast_cliquer_get_cliques(SEXP I, SEXP clqspervtx, SEXP verbose) {
               nidxclqs[v]++;
             } else {
               sidxclqs[v] = sidxclqs[v] * 2;
-              idxclqs[v] = (int *) Realloc(idxclqs[v],sidxclqs[v],int);
+              idxclqs[v] = (int *) R_Realloc(idxclqs[v],sidxclqs[v],int);
               idxclqs[v][nidxclqs[v]] = iclq + 1;
               nidxclqs[v]++;
             }
@@ -6611,7 +6587,7 @@ qp_fast_cliquer_get_cliques(SEXP I, SEXP clqspervtx, SEXP verbose) {
 
       tmpp = p->next;
       set_free(p->u.vts);
-      Free(p);
+      R_Free(p);
       p = tmpp;
     }
 
@@ -6622,12 +6598,12 @@ qp_fast_cliquer_get_cliques(SEXP I, SEXP clqspervtx, SEXP verbose) {
         qsort(idxclqs[i],nidxclqs[i],sizeof(int),int_cmp);
         SET_VECTOR_ELT(clqlstR,i,allocVector(INTSXP,nidxclqs[i]));
         Memcpy(INTEGER(VECTOR_ELT(clqlstR,i)),idxclqs[i],(size_t) nidxclqs[i]);
-        Free(idxclqs[i]);
+        R_Free(idxclqs[i]);
       }
 
-      Free(sidxclqs);
-      Free(nidxclqs);
-      Free(idxclqs);
+      R_Free(sidxclqs);
+      R_Free(nidxclqs);
+      R_Free(idxclqs);
     }
 
   }
@@ -6680,7 +6656,7 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
 
   nclqs_v = length(VECTOR_ELT(clqlstR,v));
   nclqs_w = length(VECTOR_ELT(clqlstR,w));
-  clqs_v_w = (int *) Calloc(nclqs_v+nclqs_w,int);
+  clqs_v_w = (int *) R_Calloc(nclqs_v+nclqs_w,int);
 
   if (INTEGER(verbose)[0]) {
     Rprintf("qpUpdateCliquesRemoving: initially there are %d maximal clique(s)\n",nclqlstR-n);
@@ -6703,8 +6679,8 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
   for (i=0;i<n;i++)
     SET_ADD_ELEMENT(allvtc,i);
 
-  new_clq_v = Calloc(n,int); /* store here each new clique that formerly contained vertex v */
-  new_clq_w = Calloc(n,int); /* store here each new clique that formerly contained vertex w */
+  new_clq_v = R_Calloc(n,int); /* store here each new clique that formerly contained vertex v */
+  new_clq_w = R_Calloc(n,int); /* store here each new clique that formerly contained vertex w */
 
   if (INTEGER(verbose)[0])
     Rprintf("qpUpdateCliquesRemoving: going through the %d v-w-containing clique(s) and decide which one(s) to add\n",nclqs_v_w);
@@ -6741,8 +6717,8 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
       add_clique_vta(&clqlst,new_clq_w,clq_v_w_size-1);
   }
 
-  Free(new_clq_v);
-  Free(new_clq_w);
+  R_Free(new_clq_v);
+  R_Free(new_clq_w);
 
   UNPROTECT(1); /* I */
 
@@ -6776,19 +6752,19 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
        structure is created to store the cliques in order to use a little memory as possible */
 
     tmpp = p->next;
-    Free(p->u.vta);
-    Free(p);
+    R_Free(p->u.vta);
+    R_Free(p);
     p = tmpp;
   }
 
-  Free(clqs_v_w);
+  R_Free(clqs_v_w);
 
   if (INTEGER(verbose)[0])
     Rprintf("qpUpdateCliquesRemoving: rebuilding references to cliques\n");
 
-  idxclqs = (int **) Calloc(n,int *);
-  nidxclqs = (int *) Calloc(n,int);
-  sidxclqs = (int *) Calloc(n,int);
+  idxclqs = (int **) R_Calloc(n,int *);
+  nidxclqs = (int *) R_Calloc(n,int);
+  sidxclqs = (int *) R_Calloc(n,int);
 
   for (i=0;i<n;i++)
     nidxclqs[i]=0;
@@ -6801,7 +6777,7 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
       v = INTEGER(VECTOR_ELT(new_clqlstR,i))[j] - 1;
       if (nidxclqs[v] == 0) {
         sidxclqs[v] = 1;
-        idxclqs[v] = (int *) Calloc(sidxclqs[v],int);
+        idxclqs[v] = (int *) R_Calloc(sidxclqs[v],int);
         idxclqs[v][nidxclqs[v]] = i + 1;
         nidxclqs[v]++;
       } else {
@@ -6810,7 +6786,7 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
           nidxclqs[v]++;
         } else {
           sidxclqs[v] = sidxclqs[v] * 2;
-          idxclqs[v] = (int *) Realloc(idxclqs[v],sidxclqs[v],int);
+          idxclqs[v] = (int *) R_Realloc(idxclqs[v],sidxclqs[v],int);
           idxclqs[v][nidxclqs[v]] = i + 1;
           nidxclqs[v]++;
         }
@@ -6845,15 +6821,15 @@ qp_fast_update_cliques_removing(SEXP I, SEXP clqlstR, SEXP vR, SEXP wR, SEXP ver
     qsort(idxclqs[i],nidxclqs[i],sizeof(int),int_cmp);
     PROTECT(clqrefs = allocVector(INTSXP,nidxclqs[i]));
     Memcpy(INTEGER(clqrefs),idxclqs[i],(size_t) nidxclqs[i]);
-    Free(idxclqs[i]);
+    R_Free(idxclqs[i]);
 
     SET_VECTOR_ELT(new_clqlstR,i,clqrefs);
     UNPROTECT(1); /* clqrefs */
   }
 
-  Free(sidxclqs);
-  Free(nidxclqs);
-  Free(idxclqs);
+  R_Free(sidxclqs);
+  R_Free(nidxclqs);
+  R_Free(idxclqs);
 
   UNPROTECT(1); /* new_clqlstR */
 
@@ -6945,8 +6921,8 @@ qp_fast_pac_se(SEXP Shat, SEXP I) {
       if (INTEGER(I)[i+j*n_var] != 0)
         n_edges++;
 
-  r_nz = Calloc(n_edges+n_var,int);
-  c_nz = Calloc(n_edges+n_var,int);
+  r_nz = R_Calloc(n_edges+n_var,int);
+  c_nz = R_Calloc(n_edges+n_var,int);
 
   /* selection of row and column indices according to whether
      the cells in I have value 0 or not. indices of the diagonal
@@ -6964,10 +6940,10 @@ qp_fast_pac_se(SEXP Shat, SEXP I) {
 
   UNPROTECT(1); /* I */
 
-  tmp1 = Calloc(cnz*cnz,double);
-  tmp2 = Calloc(rnz*rnz,double);
-  tmp3 = Calloc(cnz*rnz,double);
-  tmp4 = Calloc(rnz*cnz,double);
+  tmp1 = R_Calloc(cnz*cnz,double);
+  tmp2 = R_Calloc(rnz*rnz,double);
+  tmp3 = R_Calloc(cnz*rnz,double);
+  tmp4 = R_Calloc(rnz*cnz,double);
   matsubm(tmp1,REAL(Shat),n_var,c_nz,cnz,c_nz,cnz);
   matsubm(tmp2,REAL(Shat),n_var,r_nz,rnz,r_nz,rnz);
   matsubm(tmp3,REAL(Shat),n_var,c_nz,cnz,r_nz,rnz);
@@ -6975,18 +6951,18 @@ qp_fast_pac_se(SEXP Shat, SEXP I) {
 
   UNPROTECT(1); /* Shat */
 
-  Iss1 = Calloc(cnz*cnz,double);
-  Iss2 = Calloc(rnz*rnz,double);
-  Iss  = Calloc(rnz*cnz,double);
+  Iss1 = R_Calloc(cnz*cnz,double);
+  Iss2 = R_Calloc(rnz*rnz,double);
+  Iss  = R_Calloc(rnz*cnz,double);
   matscalarprod(Iss1,cnz,cnz,tmp1,tmp2);
   matscalarprod(Iss2,rnz,rnz,tmp3,tmp4);
-  Free(tmp1); Free(tmp2); Free(tmp3); Free(tmp4);
+  R_Free(tmp1); R_Free(tmp2); R_Free(tmp3); R_Free(tmp4);
   matsumf(Iss,rnz,cnz,Iss1,Iss2,1.0);
-  Free(Iss1); Free(Iss2);
+  R_Free(Iss1); R_Free(Iss2);
 
-  Issinv = Calloc(rnz*cnz,double);
+  Issinv = R_Calloc(rnz*cnz,double);
   matinv(Issinv, Iss, rnz, 0);
-  Free(Iss);
+  R_Free(Iss);
 
   PROTECT(SER = allocMatrix(REALSXP,n_var,n_var));
   SE = REAL(SER);
@@ -7001,12 +6977,12 @@ qp_fast_pac_se(SEXP Shat, SEXP I) {
     if (r_nz[i] != c_nz[i])
       SE[r_nz[i]+n_var*c_nz[i]] = SE[c_nz[i]+n_var*r_nz[i]] = Issinv[i*rnz+i];
 
-  Free(Issinv);
+  R_Free(Issinv);
 
   for (i=0;i<n_var;i++)
     SE[i+n_var*i] = NA_REAL;
 
-  Free(r_nz); Free(c_nz);
+  R_Free(r_nz); R_Free(c_nz);
 
   UNPROTECT(1); /* SER */
 
@@ -7060,10 +7036,10 @@ qp_fast_ipf(SEXP vvR, SEXP clqlstR, SEXP tolR, SEXP verbose) {
   REPROTECT(vvR  = coerceVector(vvR,REALSXP),vvpi);
   REPROTECT(tolR = coerceVector(tolR,REALSXP),tolpi);
   
-  V    = Calloc(n*n,double);
-  Vold = Calloc(n*n,double);
-  vv   = Calloc(n*n,double);
-  tmp  = Calloc(n*n,double);
+  V    = R_Calloc(n*n,double);
+  Vold = R_Calloc(n*n,double);
+  vv   = R_Calloc(n*n,double);
+  tmp  = R_Calloc(n*n,double);
   tol  = REAL(tolR)[0];
 
   UNPROTECT(1); /* tol */
@@ -7098,13 +7074,13 @@ qp_fast_ipf(SEXP vvR, SEXP clqlstR, SEXP tolR, SEXP verbose) {
 
       PROTECT(cR = coerceVector(VECTOR_ELT(clqlstR,i),INTSXP));
       csze = length(cR);
-      a = Calloc(csze,int);
+      a = R_Calloc(csze,int);
       for (j=0;j<csze;j++)
         a[j] = INTEGER(cR)[j]-1;
       UNPROTECT(1); /* cR */
 
       fast_ipf_step(n,vv,V,a,csze);
-      Free(a);
+      R_Free(a);
 
       pct = (int) (((i-fstclq)*100)/(nclqlst-fstclq));
       if (pct != ppct) {
@@ -7139,10 +7115,10 @@ qp_fast_ipf(SEXP vvR, SEXP clqlstR, SEXP tolR, SEXP verbose) {
   Memcpy(REAL(VR),V,(size_t) (n * n));
   UNPROTECT(1); /* VR */
 
-  Free(V);
-  Free(Vold);
-  Free(vv);
-  Free(tmp);
+  R_Free(V);
+  R_Free(Vold);
+  R_Free(vv);
+  R_Free(tmp);
 
   return VR;
 }
@@ -7176,14 +7152,14 @@ fast_ipf_step(int n, double* Vf, double* Vn, int* a, int csze) {
   double* tmp1,*tmp2,*tmp3,*tmp4;
   int     i,j;
 
-  b = Calloc(n-csze,int);
+  b = R_Calloc(n-csze,int);
 
   /* b <- (1:length(Vf[, 1]))[ - a] */
   setdiff(n,csze,a,b);
 
-  Vfaa  = Calloc(csze*csze,double);
-  Vnaa  = Calloc(csze*csze,double);
-  Vni   = Calloc(csze*csze,double);
+  Vfaa  = R_Calloc(csze*csze,double);
+  Vnaa  = R_Calloc(csze*csze,double);
+  Vni   = R_Calloc(csze*csze,double);
 
   /* Vfaa <- Vf[a, a] */
   for (i=0;i<csze;i++)
@@ -7197,24 +7173,24 @@ fast_ipf_step(int n, double* Vf, double* Vn, int* a, int csze) {
   matinv(Vni,Vnaa,csze,0);
 
   /* Bnba <- Vn[b, a] %*% Vni */
-  Vnba = Calloc((n-csze)*csze,double);
+  Vnba = R_Calloc((n-csze)*csze,double);
   matsubm(Vnba,Vn,n,b,n-csze,a,csze);
-  Bnba = Calloc((n-csze)*csze,double);
+  Bnba = R_Calloc((n-csze)*csze,double);
   matprod(Vnba,n-csze,csze,Vni,csze,csze,Bnba);
 
   /* Vnbba <- Vn[b, b] - Vn[b, a] %*% Vni %*% Vn[a, b] */
-  Vnbb = Calloc((n-csze)*(n-csze),double);
+  Vnbb = R_Calloc((n-csze)*(n-csze),double);
   matsubm(Vnbb,Vn,n,b,n-csze,b,n-csze);
-  Vnab = Calloc(csze*(n-csze),double);
+  Vnab = R_Calloc(csze*(n-csze),double);
   matsubm(Vnab,Vn,n,a,csze,b,n-csze);
-  tmp1 = Calloc(csze*(n-csze),double);
+  tmp1 = R_Calloc(csze*(n-csze),double);
   matprod(Vni,csze,csze,Vnab,csze,n-csze,tmp1);
-  tmp2 = Calloc((n-csze)*(n-csze),double);
+  tmp2 = R_Calloc((n-csze)*(n-csze),double);
   matprod(Vnba,n-csze,csze,tmp1,csze,n-csze,tmp2);
-  Vnbba = Calloc((n-csze)*(n-csze),double);
+  Vnbba = R_Calloc((n-csze)*(n-csze),double);
   matsumf(Vnbba,n-csze,n-csze,Vnbb,tmp2,-1.0);
-  Free(tmp1);
-  Free(tmp2);
+  R_Free(tmp1);
+  R_Free(tmp2);
 
   /* V <- Vf
   for (i=0;i<n;i++)
@@ -7223,10 +7199,10 @@ fast_ipf_step(int n, double* Vf, double* Vn, int* a, int csze) {
   Memcpy(Vn,Vf,(size_t) n*n);
 
   /* V[b, a] <- Bnba %*% Vfaa */
-  tmp1 = Calloc((n-csze)*csze,double);
+  tmp1 = R_Calloc((n-csze)*csze,double);
   matprod(Bnba,n-csze,csze,Vfaa,csze,csze,tmp1); 
   matrepm(Vn,n,b,n-csze,a,csze,tmp1);
-  Free(tmp1);
+  R_Free(tmp1);
 
   /* V[a, b] <- t(V[b, a]) */
   matsubm(Vnba,Vn,n,b,n-csze,a,csze);
@@ -7234,29 +7210,29 @@ fast_ipf_step(int n, double* Vf, double* Vn, int* a, int csze) {
   matrepm(Vn,n,a,csze,b,n-csze,Vnab);
 
   /* V[b, b] <- Vnbba + Bnba %*% Vfaa %*% t(Bnba) */
-  tmp1 = Calloc(csze*(n-csze),double);
+  tmp1 = R_Calloc(csze*(n-csze),double);
   mattran(tmp1,Bnba,n-csze,csze);
-  tmp2 = Calloc(csze*(n-csze),double);
+  tmp2 = R_Calloc(csze*(n-csze),double);
   matprod(Vfaa,csze,csze,tmp1,csze,n-csze,tmp2);
-  Free(tmp1);
-  tmp3 = Calloc((n-csze)*(n-csze),double);
+  R_Free(tmp1);
+  tmp3 = R_Calloc((n-csze)*(n-csze),double);
   matprod(Bnba,n-csze,csze,tmp2,csze,n-csze,tmp3);
-  Free(tmp2);
-  tmp4 = Calloc((n-csze)*(n-csze),double);
+  R_Free(tmp2);
+  tmp4 = R_Calloc((n-csze)*(n-csze),double);
   matsumf(tmp4,n-csze,n-csze,Vnbba,tmp3,1.0);
-  Free(tmp3);
+  R_Free(tmp3);
   matrepm(Vn,n,b,n-csze,b,n-csze,tmp4);
-  Free(tmp4);
+  R_Free(tmp4);
 
-  Free(Vfaa);
-  Free(Vnaa);
-  Free(Vni);
-  Free(Vnab);
-  Free(Vnba);
-  Free(Vnbb);
-  Free(Bnba);
-  Free(Vnbba);
-  Free(b);
+  R_Free(Vfaa);
+  R_Free(Vnaa);
+  R_Free(Vni);
+  R_Free(Vnab);
+  R_Free(Vnba);
+  R_Free(Vnbb);
+  R_Free(Bnba);
+  R_Free(Vnbba);
+  R_Free(b);
 }
 
 
@@ -7301,14 +7277,14 @@ qp_fast_htf(SEXP SR, SEXP AR, SEXP tolR, SEXP verbose) {
   A   = INTEGER(AR);
   tol = REAL(tolR)[0];
 
-  vtc_wo_i = Calloc(n_var, int);
-  Ai       = Calloc(n_var, int);
-  beta     = Calloc(n_var-1, double);
-  w        = Calloc(n_var-1, double);
-  W11      = Calloc((n_var-1)*(n_var-1), double);
-  s12Ai    = Calloc(n_var-1, double);
-  Wprev    = Calloc(n_var*n_var, double);
-  tmp      = Calloc(n_var*n_var, double);
+  vtc_wo_i = R_Calloc(n_var, int);
+  Ai       = R_Calloc(n_var, int);
+  beta     = R_Calloc(n_var-1, double);
+  w        = R_Calloc(n_var-1, double);
+  W11      = R_Calloc((n_var-1)*(n_var-1), double);
+  s12Ai    = R_Calloc(n_var-1, double);
+  Wprev    = R_Calloc(n_var*n_var, double);
+  tmp      = R_Calloc(n_var*n_var, double);
 
   for (i=0; i < n_var; i++)
     vtc_wo_i[i] = i;
@@ -7348,10 +7324,10 @@ qp_fast_htf(SEXP SR, SEXP AR, SEXP tolR, SEXP verbose) {
 
       /* beta[Ai] <- solve(W11[Ai, Ai], s12[Ai, ]) */
       if (k > 0) {
-        W11Ai = Calloc(k*k, double);
+        W11Ai = R_Calloc(k*k, double);
         matsubm(W11Ai, W11, n_var-1, Ai, k, Ai, k);
         matinv(s12Ai, W11Ai, k, 1);
-        Free(W11Ai);
+        R_Free(W11Ai);
         for (j=0; j < k; j++)
           beta[Ai[j]] = s12Ai[j];
       }
@@ -7395,14 +7371,14 @@ qp_fast_htf(SEXP SR, SEXP AR, SEXP tolR, SEXP verbose) {
       error("HTF is not converging, either the input sample covariance matrix is calculated from too few observations, or there is a problem with the initial incomplete covariance matrix\n");
   }
 
-  Free(vtc_wo_i);
-  Free(Ai);
-  Free(beta);
-  Free(w);
-  Free(W11);
-  Free(s12Ai);
-  Free(Wprev);
-  Free(tmp);
+  R_Free(vtc_wo_i);
+  R_Free(Ai);
+  R_Free(beta);
+  R_Free(w);
+  R_Free(W11);
+  R_Free(s12Ai);
+  R_Free(Wprev);
+  R_Free(tmp);
 
   UNPROTECT(1); /* WR */
 
@@ -7422,7 +7398,7 @@ cov2cor(double* R, double* V, int n) {
   double* Is;
   int     i,j;
 
-  Is = Calloc(n, double);
+  Is = R_Calloc(n, double);
   for (i=0; i < n; i++)
     Is[i] = sqrt(1.0 / V[i + i*n]);
 
@@ -7432,7 +7408,7 @@ cov2cor(double* R, double* V, int n) {
     R[i + i*n] = 1.0;
   }
 
-  Free(Is);
+  R_Free(Is);
 }
 
 
@@ -7507,8 +7483,8 @@ matinv(double* inv, double* M, int n, int p) {
     p = n;
   }
 
-  ipiv = (int *) Calloc(n, int);
-  avals = (double *) Calloc(n*n, double);
+  ipiv = (int *) R_Calloc(n, int);
+  avals = (double *) R_Calloc(n*n, double);
   Memcpy(avals, M, (size_t) (n*n));
 
   F77_CALL(dgesv)(&n, &p, avals, &n, ipiv, inv, &n, &info);
@@ -7519,15 +7495,15 @@ matinv(double* inv, double* M, int n, int p) {
 
   anorm = F77_CALL(dlange)("1", &n, &n, M, &n, (double*) NULL FCONE);
 
-  work = (double *) Calloc(4*n, double);
+  work = (double *) R_Calloc(4*n, double);
 
   F77_CALL(dgecon)("1", &n, avals, &n, &anorm, &rcond, work, ipiv, &info FCONE);
   if (rcond < tol)
     error("system is computationally singular: reciprocal condition number = %g",rcond);
 
-  Free(ipiv);
-  Free(avals);
-  Free(work);
+  R_Free(ipiv);
+  R_Free(avals);
+  R_Free(work);
 }
 
 
@@ -7546,14 +7522,14 @@ symmatinv(double* inv, double* M, int n) {
 
   /* blowing up the memory footprint, it would be nice to
    * make these calculations directly on a symmetric matrix */
-  A = Calloc(n*n, double);
+  A = R_Calloc(n*n, double);
   for (i=0; i < n; i++)
     for (j=0; j <= i; j++)
       A[i + j*n] = A[j + i*n] = M[UTE2I(i, j)];
 
   matinv(inv, A, n, n);
 
-  Free(A);
+  R_Free(A);
 }
 
 
@@ -7580,12 +7556,12 @@ symmatlogdet(double* M, int n, int* sign) {
 
   /* blowing up the memory footprint, it would be nice to
    * make these calculations directly on a symmetric matrix */
-  A = Calloc(n*n, double);
+  A = R_Calloc(n*n, double);
   for (i=0; i < n; i++)
     for (j=0; j <= i; j++)
       A[i + j*n] = A[j + i*n] = M[UTE2I(i, j)];
 
-  jpvt = Calloc(n, int);
+  jpvt = R_Calloc(n, int);
   F77_CALL(dgetrf)(&n, &n, A, &n, jpvt, &info);
 
   *sign = 1;
@@ -7608,8 +7584,8 @@ symmatlogdet(double* M, int n, int* sign) {
     }
   }
 
-  Free(jpvt);
-  Free(A);
+  R_Free(jpvt);
+  R_Free(A);
 
   return modulus;
 }
@@ -7976,9 +7952,9 @@ ssd(double* X, int p, int n, int* Y, int n_Y, int* idx_obs, int n_idx_obs,
   int     n1, n_mis=0;
   int     i,j,k,l;
 
-  meanv = Calloc(n_Y, double);
+  meanv = R_Calloc(n_Y, double);
   if (missing_mask == NULL) {
-    missing_mask = Calloc(n, int); /* assume Calloc() sets memory to zeroes */
+    missing_mask = R_Calloc(n, int); /* assume R_Calloc() sets memory to zeroes */
     allocated_missing_mask = 1;
   }
 
@@ -8016,9 +7992,9 @@ ssd(double* X, int p, int n, int* Y, int n_Y, int* idx_obs, int n_idx_obs,
     }
 
   if (allocated_missing_mask)
-    Free(missing_mask);
+    R_Free(missing_mask);
 
-  Free(meanv);
+  R_Free(meanv);
 
   return n_idx_obs - n_mis; /* return number of complete observations */
 }
@@ -8165,8 +8141,8 @@ ssd_A(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
   int     n_obs, n_co;
   int     i,j;
 
-  obs_idx = Calloc(n, int);
-  global_xtab = Calloc(n, int);
+  obs_idx = R_Calloc(n, int);
+  global_xtab = R_Calloc(n, int);
   n_obs = 0;
   for (i=0; i < n; i++) {
     global_xtab[i] = 1;
@@ -8182,8 +8158,8 @@ ssd_A(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
   if (n_I == 0) {
     n_co = ssd(X, p, n, Y, n_Y, obs_idx, n_obs, FALSE, missing_mask, ssd_A);
 
-    Free(obs_idx);
-    Free(global_xtab);
+    R_Free(obs_idx);
+    R_Free(global_xtab);
 
     return n_co;
   }
@@ -8214,8 +8190,8 @@ ssd_A(double* X, int p, int n, int* I, int n_I, int* n_levels, int* Y, int n_Y,
     i = j;
   }
 
-  Free(obs_idx);
-  Free(global_xtab);
+  R_Free(obs_idx);
+  R_Free(global_xtab);
 
   return n_co;
 }
@@ -8271,15 +8247,14 @@ qp_fast_rnd_graph(SEXP pR, SEXP dR, SEXP excludeR, SEXP verboseR) {
   /* number of elements in the upper triangular matrix including diagonal */
   n_upper_tri = (p * (p+1)) / 2;
   
-  deg         = Calloc(p, IntWithIdx);
-  working_deg = Calloc(p, IntWithIdx);
-  deg_diff    = Calloc(p, double);
-  exclude     = Calloc(p, int); /* assume Calloc() initializes memory to 0 */
+  deg         = R_Calloc(p, IntWithIdx);
+  working_deg = R_Calloc(p, IntWithIdx);
+  deg_diff    = R_Calloc(p, double);
+  exclude     = R_Calloc(p, int); /* assume R_Calloc() initializes memory to 0 */
 
   if (verbose) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("txtProgressBar")); t=CDR(t);
     SETCAR(t, ScalarInteger(3));
     SET_TAG(t, install("style"));
@@ -8329,8 +8304,7 @@ qp_fast_rnd_graph(SEXP pR, SEXP dR, SEXP excludeR, SEXP verboseR) {
 
       if (verbose) {
         SEXP s, t;
-        PROTECT(t = s = allocList(3));
-        SET_TYPEOF(s, LANGSXP);
+        PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(3)));
         SETCAR(t, install("setTxtProgressBar")); t=CDR(t);
         SETCAR(t, pb);
         SET_TAG(t, install("pb")); t=CDR(t);
@@ -8346,8 +8320,8 @@ qp_fast_rnd_graph(SEXP pR, SEXP dR, SEXP excludeR, SEXP verboseR) {
         int     n_cdf;
         double  sum_S;
 
-        S = Calloc(n_vtx_left * n_vtx_left, double);
-        cdf = Calloc((n_vtx_left * (n_vtx_left-1))/2, DblWithIdx);
+        S = R_Calloc(n_vtx_left * n_vtx_left, double);
+        cdf = R_Calloc((n_vtx_left * (n_vtx_left-1))/2, DblWithIdx);
 
         /* outer product */
         matprod(deg_diff, n_vtx_left, 1, deg_diff, 1, n_vtx_left, S);
@@ -8401,8 +8375,8 @@ qp_fast_rnd_graph(SEXP pR, SEXP dR, SEXP excludeR, SEXP verboseR) {
           } /* else
             error("No cdf could be built\n"); */
     
-          Free(cdf);
-          Free(S);
+          R_Free(cdf);
+          R_Free(S);
         } else
           n_vtx_left = 0;
       }
@@ -8417,15 +8391,14 @@ qp_fast_rnd_graph(SEXP pR, SEXP dR, SEXP excludeR, SEXP verboseR) {
     }
   }
 
-  Free(exclude);
-  Free(deg_diff);
-  Free(working_deg);
-  Free(deg);
+  R_Free(exclude);
+  R_Free(deg_diff);
+  R_Free(working_deg);
+  R_Free(deg);
 
   if (verbose) {
     SEXP s, t;
-    PROTECT(t = s = allocList(2));
-    SET_TYPEOF(s, LANGSXP);
+    PROTECT(t = s = LCONS(R_NilValue, Rf_allocList(2)));
     SETCAR(t, install("close")); t=CDR(t);
     SETCAR(t, pb);
     eval(s, R_GlobalEnv);

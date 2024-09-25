@@ -1,9 +1,6 @@
 /*
- * All malloc/free calls have been changed to the R_alloc
- * construct from the R-system and all calloc/free calls
- * have been changed to the Calloc/Free construct also from
- * the R-system such that R takes over the management of the
- * memory allocation. Robert Castelo (17/11/2008)
+ * All Calloc/Free calls have been changed to the R_Calloc/R_Free
+ * construct from the R-system. Robert Castelo (25/09/2024)
 */
 
 /*
@@ -159,7 +156,7 @@ boolean reorder_is_bijection(int *order,int n) {
 	int i;
 
 	/* used=calloc(n,sizeof(boolean)); */
-	used=Calloc(n, boolean);
+	used=R_Calloc(n, boolean);
 	for (i=0; i<n; i++) {
 		if (order[i]<0 || order[i]>=n) {
 			/* free(used); */
@@ -178,7 +175,7 @@ boolean reorder_is_bijection(int *order,int n) {
 		}
 	}
 	/* free(used); */
-        Free(used);
+        R_Free(used);
 	return TRUE;
 }
 
@@ -259,11 +256,11 @@ int *reorder_by_unweighted_greedy_coloring(graph_t *g,boolean weighted) {
 	boolean samecolor;
 
 	/* tmp_used=calloc(g->n,sizeof(boolean)); */
-	tmp_used=Calloc(g->n, boolean);
+	tmp_used=R_Calloc(g->n, boolean);
 	/* degree=calloc(g->n,sizeof(int)); */
-	degree=Calloc(g->n, int);
+	degree=R_Calloc(g->n, int);
 	/* order=calloc(g->n,sizeof(int)); */
-	order=Calloc(g->n, int);
+	order=R_Calloc(g->n, int);
 
 	for (i=0; i < g->n; i++) {
 		for (j=0; j < g->n; j++) {
@@ -307,9 +304,9 @@ int *reorder_by_unweighted_greedy_coloring(graph_t *g,boolean weighted) {
 	}
 
 	/* free(tmp_used); */
-	Free(tmp_used);
+	R_Free(tmp_used);
 	/* free(degree); */
-	Free(degree);
+	R_Free(degree);
 	return order;
 }
 
@@ -336,7 +333,7 @@ int *reorder_by_weighted_greedy_coloring(graph_t *g, boolean weighted) {
 	/* order=malloc(g->n * sizeof(int)); */
 	order=(int *) R_alloc(g->n, sizeof(int));
 	/* used=calloc(g->n,sizeof(boolean)); */
-	used=Calloc(g->n, boolean);
+	used=R_Calloc(g->n, boolean);
 	
 	for (i=0; i < g->n; i++) {
 		nwt[i]=0;
@@ -368,7 +365,7 @@ int *reorder_by_weighted_greedy_coloring(graph_t *g, boolean weighted) {
 
 	/* free(nwt); */
 	/* free(used); */
-        Free(used);
+        R_Free(used);
 
 	ASSERT(reorder_is_bijection(order,g->n));
 
@@ -388,9 +385,9 @@ int *reorder_by_degree(graph_t *g, boolean weighted) {
 	int maxdegree,maxvertex=0;
 
 	/* degree=calloc(g->n,sizeof(int)); */
-	degree=Calloc(g->n, int);
+	degree=R_Calloc(g->n, int);
 	/* order=calloc(g->n,sizeof(int)); */
-	order=Calloc(g->n, int);
+	order=R_Calloc(g->n, int);
 
 	for (i=0; i < g->n; i++) {
 		for (j=0; j < g->n; j++) {
@@ -419,7 +416,7 @@ int *reorder_by_degree(graph_t *g, boolean weighted) {
 	}
 
 	/* free(degree); */
-        Free(degree);
+        R_Free(degree);
 	return order;
 }
 
@@ -448,9 +445,9 @@ int *reorder_by_random(graph_t *g, boolean weighted) {
         srand(time(NULL));
 #endif
 	* new=calloc(g->n, sizeof(int)); *
-	new=Calloc(g->n, int);
+	new=R_Calloc(g->n, int);
 	* used=calloc(g->n, sizeof(boolean)); *
-	used=Calloc(g->n, boolean);
+	used=R_Calloc(g->n, boolean);
 	for (i=0; i < g->n; i++) {
 		do {
 			r=rand() % g->n;
@@ -459,7 +456,7 @@ int *reorder_by_random(graph_t *g, boolean weighted) {
 		used[r]=TRUE;
 	}
 	* free(used); *
-        Free(used);
+        R_Free(used);
 	return new;
 }
 */

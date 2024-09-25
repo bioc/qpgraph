@@ -1304,7 +1304,7 @@ set_t clique_unweighted_find_single(graph_t *g,int min_size,int max_size,
 		free(temp_list[i]); */
 	/* free(temp_list); */
 	/* free(table); */
-	Free(table);
+	R_Free(table);
 	/* free(clique_size); */
 
 	ENTRANCE_RESTORE();
@@ -1421,7 +1421,7 @@ int clique_unweighted_find_all(graph_t *g, int min_size, int max_size,
 		free(temp_list[i]); */
 	/* free(temp_list); */
 	/* free(table); */
-	Free(table);
+	R_Free(table);
 	/* free(clique_size); */
 	set_free(current_clique);
 
@@ -1610,7 +1610,7 @@ set_t clique_find_single(graph_t *g,int min_weight,int max_weight,
 	temp_list=NULL;
 	temp_count=0;
 	/* free(table); */
-	Free(table);
+	R_Free(table);
 	set_free(current_clique);
 	current_clique=NULL;
 	/* free(clique_size); */
@@ -1755,7 +1755,7 @@ int clique_find_all(graph_t *g, int min_weight, int max_weight,
 		free(temp_list[i]); */
 	/* free(temp_list); */
 	/* free(table); */
-	Free(table);
+	R_Free(table);
 	set_free(current_clique);
 	set_free(best_clique);
 	/* free(clique_size); */
