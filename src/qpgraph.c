@@ -21,11 +21,13 @@
 
 
 /* from https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Fortran-character-strings */
+#ifndef USE_FC_LEN_T
 #define USE_FC_LEN_T
+#endif
 #include <Rconfig.h>
 #include <R_ext/BLAS.h>
 #ifndef FCONE
-# define FCONE
+#define FCONE
 #endif
 
 #include <R.h>
