@@ -329,7 +329,7 @@ setMethod("qpNrr", signature(X="matrix"),
 
       cl <- makeCl(clusterSize, type="MPI", snowlib=system.file(package="qpgraph"))
       clSetupRNG(cl)
-      res <- clEvalQ(cl, require(qpgraph, quietly=TRUE))
+      res <- clEvalQ(cl, requireNamespace(qpgraph, quietly=TRUE))
       if (!all(unlist(res))) {
         stopCl(cl)
         stop("The package 'qpgraph' could not be loaded in some of the nodes of the cluster")
@@ -1072,7 +1072,7 @@ setMethod("qpAvgNrr", signature(X="matrix"),
 
     cl <- makeCl(clusterSize, type="MPI", snowlib=system.file(package="qpgraph"))
     clSetupRNG(cl)
-    res <- clEvalQ(cl, require(qpgraph, quietly=TRUE))
+    res <- clEvalQ(cl, requireNamespace(qpgraph, quietly=TRUE))
     if (!all(unlist(res))) {
       stopCl(cl)
       stop("The package 'qpgraph' could not be loaded in some of the nodes of the cluster")
@@ -1430,7 +1430,7 @@ setMethod("qpGenNrr", signature(X="matrix"),
 
     cl <- makeCl(clusterSize, type="MPI", snowlib=system.file(package="qpgraph"))
     clSetupRNG(cl)
-    res <- clEvalQ(cl, require(qpgraph, quietly=TRUE))
+    res <- clEvalQ(cl, requireNamespace(qpgraph, quietly=TRUE))
     if (!all(unlist(res))) {
       stopCl(cl)
       stop("The package 'qpgraph' could not be loaded in some of the nodes of the cluster")
@@ -2340,14 +2340,14 @@ qpHist <- function(nrrMatrix, A=NULL,
     hist(nrr, col="yellow", main=titlehist, xlab="non-rejection rate", freq=freq)
   } else {
     # only beta
-    T <- as.matrix(nrrMatrix) ## till [<- works with dspMatrix matrices
-    T[!as.matrix(A)] <- -1
-    xbeta <- T[upper.tri(T)]
+    Tmat <- as.matrix(nrrMatrix) ## till [<- works with dspMatrix matrices
+    Tmat[!as.matrix(A)] <- -1
+    xbeta <- Tmat[upper.tri(Tmat)]
     xbeta <- xbeta[xbeta != -1]
     # not beta
-    T <- as.matrix(nrrMatrix) ## till [<- works with dspMatrix matrices
-    T[as.matrix(A)] <- -1
-    xnotbeta <- T[upper.tri(T)]
+    Tmat <- as.matrix(nrrMatrix) ## till [<- works with dspMatrix matrices
+    Tmat[as.matrix(A)] <- -1
+    xnotbeta <- Tmat[upper.tri(Tmat)]
     xnotbeta <- xnotbeta[xnotbeta != -1]
     # plots
     split.screen(c(2, 2))
@@ -3537,12 +3537,12 @@ setMethod("qpPCC", signature(X="matrix"),
   R <- as(as(as(Matrix::cov2cor(as.matrix(S)), "dMatrix"), "symmetricMatrix"), "packedMatrix")
 
   ## calculate t-statistics
-  T <- (N - 2) / (1 - R*R)
-  diag(T) <- (N - 2) * 100000 # just to get 0 p-values on the diagonal
-  T <- R * sqrt(T)
+  Tmat <- (N - 2) / (1 - R*R)
+  diag(Tmat) <- (N - 2) * 100000 # just to get 0 p-values on the diagonal
+  Tmat <- R * sqrt(Tmat)
 
   ## calculate two-sided p-values
-  p <- pt(as.matrix(T), df=N - 2)
+  p <- pt(as.matrix(Tmat), df=N - 2)
   P <- as(as(as(2 * pmin(p, 1 - p), "dMatrix"), "symmetricMatrix"), "packedMatrix")
 
   list(R=R, P=P)
@@ -3924,7 +3924,7 @@ setMethod("qpFunctionalCoherence",
 
     cl <- makeCl(clusterSize, type="MPI", snowlib=system.file(package="qpgraph"))
     clSetupRNG(cl)
-    res <- clEvalQ(cl, require(qpgraph, quietly=TRUE))
+    res <- clEvalQ(cl, requireNamespace(qpgraph, quietly=TRUE))
     if (!all(unlist(res))) {
       stopCl(cl)
       stop("The package 'qpgraph' could not be loaded in some of the nodes of the cluster")
@@ -4358,7 +4358,7 @@ qpTopPairs <- function(measurementsMatrix=NULL, refGraph=NULL, n=6L, file=NULL,
 qpPlotNetwork <- function(g, vertexSubset=graph::nodes(g), boundary=FALSE,
                           minimumSizeConnComp=2, pairup.i=NULL, pairup.j=NULL,
                           highlight=NULL, annotation=NULL, layout=c("twopi", "dot", "neato", "circo", "fdp")) {
-  ## require(graph)
+  ## requireNamespace(graph)
 
   layout <- match.arg(layout)
 
@@ -4444,10 +4444,11 @@ qpPlotNetwork <- function(g, vertexSubset=graph::nodes(g), boundary=FALSE,
     }
 
     pkg <- "Rgraphviz"
-    if (!library(pkg, logical.return=TRUE, character.only=TRUE)) {
+    if (!requireNamespace(pkg)) {
       warning("qpPlotNetwork() requires package 'Rgraphviz' to plot the network and does not seem to be installed\n")
       return(invisible(g))
     }
+    attachNamespace(pkg)
 
     mkNodeAttrs <- get("makeNodeAttrs", mode="function")
     nodattr <- mkNodeAttrs(g, label=nodeLabels, shape="ellipse", fixedsize=FALSE,
@@ -4475,10 +4476,11 @@ qpPlotNetwork <- function(g, vertexSubset=graph::nodes(g), boundary=FALSE,
     }
 
     pkg <- "Rgraphviz"
-    if (!library(pkg, logical.return=TRUE, character.only=TRUE)) {
+    if (!requireNamespace(pkg)) {
       warning("qpPlotNetwork() requires package 'Rgraphviz' to plot the network and does not seem to be installed\n")
       return(invisible(g))
     }
+    attachNamespace(pkg)
 
     mkNodeAttrs <- get("makeNodeAttrs", mode="function")
     nodattr <- mkNodeAttrs(g, label=nodeLabels, shape="ellipse", fixedsize=FALSE,
