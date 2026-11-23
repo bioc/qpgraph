@@ -1,6 +1,6 @@
 Package: qpgraph
 Title: Estimation of Genetic and Molecular Regulatory Networks from High-Throughput Genomics Data
-Version: 2.47.3
+Version: 2.48.0
 Authors@R: c(person("Robert", "Castelo", role=c("aut", "cre"), email="robert.castelo@upf.edu"),
              person("Alberto", "Roverato", role="aut", email="alberto.roverato@unibo.it"))
 Description: Estimate gene and eQTL networks from high-throughput expression and genotyping assays. The implemented methodology is based on undirected Gaussian graphical models, and more concretely, in q-order partial correlation graphs, or qp-graphs for short. The qp-graph methodology provides a robust way to estimate direct associations from multivariate data where the number of random variables p (in this case the number of genes in the rows) is much larger than the number of multivariate observations n (in this case the number of samples in the columns, i.e., where p >> n.
